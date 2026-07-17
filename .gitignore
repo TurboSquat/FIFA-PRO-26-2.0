@@ -1,0 +1,27 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+
+.context/
+.env
+.env.*
+.venv/
+venv/
+
+bets/
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# DuckDB analytics database — derived artifact, rebuildable via
+# `python3 tools/build_duckdb.py`. The masters at db/masters/*.csv are
+# the committed source of truth; the .duckdb file is not.
+data/*.duckdb
+data/*.duckdb-wal
+data/*.duckdb-tmp
+
+# Build-step quarantine review queue (generated each build)
+db/registry/unmatched.csv
+
+graphene-app-world-cup/
