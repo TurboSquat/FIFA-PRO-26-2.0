@@ -1716,6 +1716,7 @@ async function init() {
   if (!currentUser) return;
   if (currentAlbum === '2018' || currentAlbum === '2022') {
     await loadTeamsFromFirestore();
+    rebuildTeamOrders();
   }
   if (allPlayers.length === 0) {
   let num = 1;
@@ -2663,7 +2664,7 @@ function toggleDotsMenu(el) {
 }
 
 function selectAllTeam(gName, teamName) {
-  const actT = currentAlbum === '2026' ? teams : teams2022;
+  const actT = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : teams2018);
   const team = actT[gName].teams.find(t => t.name === teamName);
   if (!team) return;
   setState(`${gName}-${teamName}-badge`, 'owned');
@@ -2674,7 +2675,7 @@ function selectAllTeam(gName, teamName) {
 }
 
 function removeAllTeam(gName, teamName) {
-  const actT = currentAlbum === '2026' ? teams : teams2022;
+  const actT = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : teams2018);
   const team = actT[gName].teams.find(t => t.name === teamName);
   if (!team) return;
   setState(`${gName}-${teamName}-badge`, 'missing');
@@ -2710,17 +2711,13 @@ function toggleCoca(v) {
 const teamOrder = ["México","Sudáfrica","Coreia do Sul","República Tcheca","Canadá","Bósnia e Herzegovina","Catar","Suíça","Brasil","Marrocos","Haití","Escócia","Estados Unidos","Paraguai","Austrália","Turquia","Alemanha","Curaçao","Costa do Marfim","Equador","Países Baixos","Japão","Suécia","Tunísia","Bélgica","Egito","Irã","Nova Zelândia","Espanha","Cabo Verde","Arábia Saudita","Uruguai","França","Senegal","Iraque","Noruega","Argentina","Argélia","Áustria","Jordânia","Portugal","Congo DR","Uzbequistão","Colômbia","Inglaterra","Croácia","Gana","Panamá"];
 
 const teamOrder2022 = [];
-if (typeof wc2022 !== 'undefined') {
+const teamOrder2018 = [];
+function rebuildTeamOrders() {
+  teamOrder2022.length = 0;
+  teamOrder2018.length = 0;
   const grpOrder = ['A','B','C','D','E','F','G','H'];
   grpOrder.forEach(g => {
     if (teams2022[g]) teams2022[g].teams.forEach(t => teamOrder2022.push(t.name));
-  });
-}
-
-const teamOrder2018 = [];
-if (typeof wc2018 !== 'undefined') {
-  const grpOrder = ['A','B','C','D','E','F','G','H'];
-  grpOrder.forEach(g => {
     if (teams2018[g]) teams2018[g].teams.forEach(t => teamOrder2018.push(t.name));
   });
 }
