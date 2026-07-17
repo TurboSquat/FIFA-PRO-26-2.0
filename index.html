@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="teams2014.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCPWDIHK5yeEEW75lY_Y15Ir23hXagKhy4",
@@ -1085,6 +1086,7 @@ const teams2026 = teams;
 
 const teams2022 = {};
 const teams2018 = {};
+const teams2014 = typeof teams2014_data !== 'undefined' ? teams2014_data : {};
 
 async function loadTeamsFromFirestore() {
   const years = ['2018', '2022'];
@@ -1380,11 +1382,13 @@ let allPlayers2022 = [];
 let _states2026 = {};
 let _states2022 = {};
 let _states2018 = {};
+let _states2014 = {};
 
 function loadActivePlayerStates() {
   if (currentAlbum === '2026') playerStates = _states2026;
   else if (currentAlbum === '2022') playerStates = _states2022;
-  else playerStates = _states2018;
+  else if (currentAlbum === '2018') playerStates = _states2018;
+  else playerStates = _states2014;
 }
 
 function toggleLoginMode() {
@@ -1544,7 +1548,8 @@ async function deleteAccount() {
 async function deleteAllData() {
   if (currentAlbum === '2026') { _states2026 = {}; playerStates = _states2026; }
   else if (currentAlbum === '2022') { _states2022 = {}; playerStates = _states2022; }
-  else { _states2018 = {}; playerStates = _states2018; }
+  else if (currentAlbum === '2018') { _states2018 = {}; playerStates = _states2018; }
+  else { _states2014 = {}; playerStates = _states2014; }
   showCoca = false;
   if (currentUser) {
     try {
@@ -1552,6 +1557,7 @@ async function deleteAllData() {
         playerStates: _states2026,
         playerStates2022: _states2022,
         playerStates2018: _states2018,
+        playerStates2014: _states2014,
         currentAlbum,
         showCoca: false,
         displayName: currentUser.name || '',
@@ -1609,6 +1615,7 @@ async function loadUserData() {
       _states2026 = data.playerStates || {};
       _states2022 = data.playerStates2022 || {};
       _states2018 = data.playerStates2018 || {};
+      _states2014 = data.playerStates2014 || {};
       currentAlbum = data.currentAlbum || '2026';
       showCoca = data.showCoca !== undefined ? data.showCoca : true;
       if (data.displayName) currentUser.name = data.displayName;
@@ -1628,6 +1635,8 @@ async function loadUserData() {
     } else {
       _states2026 = {};
       _states2022 = {};
+      _states2018 = {};
+      _states2014 = {};
       currentAlbum = '2026';
       showCoca = false;
     }
@@ -1638,6 +1647,8 @@ async function loadUserData() {
     console.error('Erro ao carregar dados:', e);
     _states2026 = {};
     _states2022 = {};
+    _states2018 = {};
+    _states2014 = {};
     currentAlbum = '2026';
     loadActivePlayerStates();
   }
@@ -1652,6 +1663,7 @@ function saveUserData() {
         playerStates: _states2026,
         playerStates2022: _states2022,
         playerStates2018: _states2018,
+        playerStates2014: _states2014,
         currentAlbum,
         showCoca,
         displayName: currentUser.name || '',
@@ -1718,9 +1730,12 @@ async function init() {
     await loadTeamsFromFirestore();
     rebuildTeamOrders();
   }
+  if (currentAlbum === '2014') {
+    rebuildTeamOrders();
+  }
   if (allPlayers.length === 0) {
   let num = 1;
-  const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : teams2018);
+  const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : teams2018));
   if (currentAlbum === '2026') {
     fwcStickers.forEach(s => {
       allPlayers.push({ id: `fwc-${s.num}`, group: 'FWC', team: 'FWC', name: s.name, pos: 'fwc', num });
@@ -1827,6 +1842,49 @@ async function init() {
       allPlayers.push({ id: s.id, group: 'FWC', team: 'Legends', name: s.name, pos: 'fwc', num: s.num });
     });
   }
+  if (currentAlbum === '2014') {
+    var fwc2014IntroAll = [
+      { name: 'Arte Panini', id: 'fwc2014-Intro Arte Panini', num: 0 },
+      { name: 'Troféu FIFA', id: 'fwc2014-Intro Troféu', num: 1 },
+      { name: 'Logotipo', id: 'fwc2014-Intro Logotipo', num: 2 },
+      { name: 'Mascote Fuleco', id: 'fwc2014-Intro Fuleco', num: 3 },
+      { name: 'Bola Brazuca', id: 'fwc2014-Intro Brazuca', num: 4 },
+      { name: 'Bandeiras', id: 'fwc2014-Intro Bandeiras', num: 5 },
+      { name: 'Formação', id: 'fwc2014-Intro Formação', num: 6 },
+      { name: 'Copa Confederações', id: 'fwc2014-Intro Confederações', num: 7 }
+    ];
+    var fwc2014EstadiosAll = [
+      { name: 'Arena de São Paulo', id: 'fwc2014-Est. São Paulo', num: 8 },
+      { name: 'Maracanã', id: 'fwc2014-Est. Maracanã', num: 9 },
+      { name: 'Estádio Nacional', id: 'fwc2014-Est. Brasília', num: 10 },
+      { name: 'Arena Fonte Nova', id: 'fwc2014-Est. Salvador', num: 11 },
+      { name: 'Mineirão', id: 'fwc2014-Est. Belo Horizonte', num: 12 },
+      { name: 'Arena Pantanal', id: 'fwc2014-Est. Cuiabá', num: 13 },
+      { name: 'Arena da Amazônia', id: 'fwc2014-Est. Manaus', num: 14 },
+      { name: 'Arena Pernambuco', id: 'fwc2014-Est. Recife', num: 15 },
+      { name: 'Beira-Rio', id: 'fwc2014-Est. Porto Alegre', num: 16 },
+      { name: 'Arena Castelão', id: 'fwc2014-Est. Fortaleza', num: 17 },
+      { name: 'Arena das Dunas', id: 'fwc2014-Est. Natal', num: 18 },
+      { name: 'Arena de Curitiba', id: 'fwc2014-Est. Curitiba', num: 19 }
+    ];
+    var fwc2014MapaAll = [
+      { name: 'Mapa 1', id: 'fwc2014-Mapa 1', num: 20 },
+      { name: 'Mapa 2', id: 'fwc2014-Mapa 2', num: 21 },
+      { name: 'Mapa 3', id: 'fwc2014-Mapa 3', num: 22 },
+      { name: 'Mapa 4', id: 'fwc2014-Mapa 4', num: 23 },
+      { name: 'Mapa 5', id: 'fwc2014-Mapa 5', num: 24 },
+      { name: 'Mapa 6', id: 'fwc2014-Mapa 6', num: 25 },
+      { name: 'Mapa 7', id: 'fwc2014-Mapa 7', num: 26 },
+      { name: 'Mapa 8', id: 'fwc2014-Mapa 8', num: 27 },
+      { name: 'Mapa 9', id: 'fwc2014-Mapa 9', num: 28 },
+      { name: 'Mapa 10', id: 'fwc2014-Mapa 10', num: 29 },
+      { name: 'Mapa 11', id: 'fwc2014-Mapa 11', num: 30 },
+      { name: 'Mapa 12', id: 'fwc2014-Mapa 12', num: 31 }
+    ];
+    [...fwc2014IntroAll, ...fwc2014EstadiosAll, ...fwc2014MapaAll].forEach(s => {
+      allPlayers.push({ id: s.id, group: 'FWC', team: 'FWC', name: s.name, pos: 'fwc', num: s.num });
+    });
+  }
   for (const [gName, gData] of Object.entries(activeTeams)) {
     for (const team of gData.teams) {
       if (currentAlbum === '2018') {
@@ -1851,6 +1909,16 @@ async function init() {
           const id = `${gName}-${team.name}-${i}`;
           allPlayers.push({ id, group: gName, team: team.name, name: p, pos, num });
           num++;
+        });
+      } else if (currentAlbum === '2014') {
+        const idBadge = `${gName}-${team.name}-badge`;
+        allPlayers.push({ id: idBadge, group: gName, team: team.name, name: 'Emblema', pos: 'badge', num: get2014SeqNum(team.name, 1) });
+        const idPhoto = `${gName}-${team.name}-photo`;
+        allPlayers.push({ id: idPhoto, group: gName, team: team.name, name: 'Foto de Equipa', pos: 'photo', num: get2014SeqNum(team.name, 13) });
+        team.players.forEach((p, i) => {
+          const pos = i < 3 ? 'GR' : i < 9 ? 'ZAG' : i < 14 ? 'MD' : 'AT';
+          const id = `${gName}-${team.name}-${i}`;
+          allPlayers.push({ id, group: gName, team: team.name, name: p, pos, num: get2014SeqNum(team.name, i + 3) });
         });
       } else {
         const idBadge = `${gName}-${team.name}-badge`;
@@ -1923,7 +1991,7 @@ function setPage(p) {
 
 function renderGroupBar() {
   const bar = document.getElementById('groupBar');
-  const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : teams2018);
+  const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : teams2018));
   let html = `<div class="group-btn active" onclick="setGroup('all')">Todos</div>`;
   if (currentAlbum === '2026') {
     html += `<div class="group-btn" onclick="setGroup('FWC')">⭐ FWC</div>`;
@@ -2219,7 +2287,7 @@ function render() {
     return;
   }
 
-  const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : teams2018);
+  const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : teams2018));
   const activeTeamOrder = getActiveTeamOrder();
   const groups = (currentPage === 'grupos' && currentGroup !== 'all' && currentGroup !== 'FWC' && currentGroup !== 'Coca-Cola') ? [currentGroup] : (currentGroup === 'FWC' || currentGroup === 'Coca-Cola') ? [] : Object.keys(activeTeams);
 
@@ -2712,13 +2780,16 @@ const teamOrder = ["México","Sudáfrica","Coreia do Sul","República Tcheca","C
 
 const teamOrder2022 = [];
 const teamOrder2018 = [];
+const teamOrder2014 = [];
 function rebuildTeamOrders() {
   teamOrder2022.length = 0;
   teamOrder2018.length = 0;
+  teamOrder2014.length = 0;
   const grpOrder = ['A','B','C','D','E','F','G','H'];
   grpOrder.forEach(g => {
     if (teams2022[g]) teams2022[g].teams.forEach(t => teamOrder2022.push(t.name));
     if (teams2018[g]) teams2018[g].teams.forEach(t => teamOrder2018.push(t.name));
+    if (teams2014[g]) teams2014[g].teams.forEach(t => teamOrder2014.push(t.name));
   });
 }
 
