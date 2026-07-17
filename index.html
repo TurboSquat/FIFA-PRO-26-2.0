@@ -1089,9 +1089,9 @@ const teams2018 = {};
 const teams2014 = typeof teams2014_data !== 'undefined' ? teams2014_data : {};
 
 async function loadTeamsFromFirestore() {
-  const years = ['2018', '2022'];
+  const years = ['2014', '2018', '2022'];
   for (const year of years) {
-    const target = year === '2018' ? teams2018 : teams2022;
+    const target = year === '2014' ? teams2014 : (year === '2018' ? teams2018 : teams2022);
     const groups = ['A','B','C','D','E','F','G','H'];
     for (const g of groups) {
       try {
@@ -1182,7 +1182,9 @@ const teamIso = {
   "Holanda":"nl","EUA":"us","País de Gales":"gb","Polônia":"pl",
   "Dinamarca":"dk","Sérvia":"rs","Camarões":"cm","Costa Rica":"cr",
   "Rússia":"ru","Peru":"pe","Islândia":"is","Nigéria":"ng",
-  "Coreia do Sul":"kr","Arábia Saudita":"sa"
+  "Coreia do Sul":"kr","Arábia Saudita":"sa",
+  "Honduras":"hn","Grécia":"gr","Chile":"cl",
+  "Brasil":"br","Croácia":"hr","México":"mx","Camarões":"cm","Espanha":"es","Países Baixos":"nl","Chile":"cl","Austrália":"au","Colômbia":"co","Grécia":"gr","Costa do Marfim":"ci","Japão":"jp","Uruguai":"uy","Costa Rica":"cr","Inglaterra":"gb","Itália":"it","Suíça":"ch","Equador":"ec","França":"fr","Honduras":"hn","Argentina":"ar","Bósnia e Herzegovina":"ba","Irã":"ir","Nigéria":"ng","Alemanha":"de","Portugal":"pt","Gana":"gh","Estados Unidos":"us","Bélgica":"be","Argélia":"dz","Rússia":"ru","Coreia do Sul":"kr"
 };
 function getFlagImg(name, size) {
   const iso = teamIso[name];
@@ -1240,6 +1242,17 @@ const teamColors2026 = {
   "Costa Rica":["#002B7F","#FFF"],"Coreia do Sul":["#FFF","#003478","#C60C30"]
 };
 
+const teamColors2014 = {
+  "Brasil":["#009739","#FEDD00","#012169"],"Croácia":["#171796","#FF0000","#FFF"],"México":["#006847","#CE1126","#FFF"],"Camarões":["#007A5E","#CE1126","#FCD116"],
+  "Espanha":["#AA151B","#F1BF00","#FFF"],"Países Baixos":["#FF6600","#FFF"],"Chile":["#D52B1E","#0033A0","#FFF"],"Austrália":["#00008B","#FFF"],
+  "Colômbia":["#FCD116","#003087","#CE1126"],"Grécia":["#0D5EAF","#FFF"],"Costa do Marfim":["#FF8E00","#009A44","#FFF"],"Japão":["#FFF","#BC002D"],
+  "Uruguai":["#FFF","#5DCBF9","#000"],"Costa Rica":["#002B7F","#FFF"],"Inglaterra":["#FFF","#C8102E"],"Itália":["#009246","#FFF","#CE2B37"],
+  "Suíça":["#FF0000","#FFF"],"Equador":["#FCD116","#003DA5"],"França":["#002395","#ED2939","#FFF"],"Honduras":["#0073CF","#FFF","#CE1126"],
+  "Argentina":["#74ACDF","#FFF"],"Bósnia e Herzegovina":["#0033A0","#FFF","#FCD116"],"Irã":["#239F40","#DA0000","#FFF"],"Nigéria":["#008751","#FFF","#000"],
+  "Alemanha":["#000","#DD0000","#FFCC00"],"Portugal":["#006600","#FF0000","#FFF"],"Gana":["#006B3F","#FCD116","#000"],"Estados Unidos":["#002868","#BF0A30","#FFF"],
+  "Bélgica":["#000","#FDDA24","#ED2939"],"Argélia":["#006233","#FFF"],"Rússia":["#E4181C","#0039A6","#FFF"],"Coreia do Sul":["#FFF","#003478","#C60C30"]
+};
+
 const playerFallback = {
   "Croácia-Mateo Kovacic": "https://www.worldtradingcards.com/cdn/shop/files/46_FWC_CRO_010.webp?v=1777742882",
   "Alemanha-David Raum": "https://www.worldtradingcards.com/cdn/shop/files/17_FWC_GER_004.webp?v=1777743707",
@@ -1266,8 +1279,8 @@ function handleStickerError(img) {
   var num = img.getAttribute('data-num');
   if (!img.getAttribute('data-tried')) {
     img.setAttribute('data-tried','1');
-    if (currentAlbum === '2018') {
-      img.src = `https://www.laststicker.com/i/cards/3852/${num}.png`;
+    if (currentAlbum === '2018' || currentAlbum === '2014') {
+      img.src = `https://www.laststicker.com/i/cards/${currentAlbum === '2014' ? '1498' : '3852'}/${num}.png`;
     } else {
       img.src = getStickerImageUrlPng(team, parseInt(num));
     }
@@ -1283,7 +1296,7 @@ function handleStickerError(img) {
     container.insertBefore(el, container.firstChild);
   } else {
     var ini = pn.split(' ').map(function(w){return w[0]}).join('').substring(0,2).toUpperCase();
-    var teamColors = currentAlbum === '2018' ? teamColors2018 : (currentAlbum === '2022' ? teamColors2022 : teamColors2026);
+    var teamColors = currentAlbum === '2018' ? teamColors2018 : (currentAlbum === '2014' ? teamColors2014 : (currentAlbum === '2022' ? teamColors2022 : teamColors2026));
     var tc = teamColors[team] || ['#1a2a6c','#b21f1f','#fdbb2d'];
     var bg = tc.length > 2 ? 'linear-gradient(135deg,' + tc[0] + ',' + tc[1] + ')' : 'linear-gradient(135deg,' + tc[0] + ',' + (tc[1]||tc[0]) + ')';
     var flagIso = teamIso[team] || '';
@@ -1310,7 +1323,7 @@ function handleBadgeError(img) {
   if (fb) {
     container.insertAdjacentHTML('beforeend', '<img src="' + fb + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px;">');
   } else {
-    var teamColors = currentAlbum === '2018' ? teamColors2018 : (currentAlbum === '2022' ? teamColors2022 : teamColors2026);
+    var teamColors = currentAlbum === '2018' ? teamColors2018 : (currentAlbum === '2014' ? teamColors2014 : (currentAlbum === '2022' ? teamColors2022 : teamColors2026));
     var tc = teamColors[team];
     if (tc) {
       var bg = tc.length > 2 ? 'linear-gradient(135deg,' + tc[0] + ',' + tc[1] + ')' : 'linear-gradient(135deg,' + tc[0] + ',' + (tc[1]||tc[0]) + ')';
@@ -1334,7 +1347,7 @@ function handlePhotoError(img) {
   if (fb) {
     container.insertAdjacentHTML('beforeend', '<img src="' + fb + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px;">');
   } else {
-    var teamColors = currentAlbum === '2018' ? teamColors2018 : (currentAlbum === '2022' ? teamColors2022 : teamColors2026);
+    var teamColors = currentAlbum === '2018' ? teamColors2018 : (currentAlbum === '2014' ? teamColors2014 : (currentAlbum === '2022' ? teamColors2022 : teamColors2026));
     var tc = teamColors[team];
     if (tc) {
       var bg = tc.length > 2 ? 'linear-gradient(135deg,' + tc[0] + ',' + tc[1] + ')' : 'linear-gradient(135deg,' + tc[0] + ',' + (tc[1]||tc[0]) + ')';
@@ -1914,7 +1927,7 @@ async function init() {
         const idBadge = `${gName}-${team.name}-badge`;
         allPlayers.push({ id: idBadge, group: gName, team: team.name, name: 'Emblema', pos: 'badge', num: get2014SeqNum(team.name, 1) });
         const idPhoto = `${gName}-${team.name}-photo`;
-        allPlayers.push({ id: idPhoto, group: gName, team: team.name, name: 'Foto de Equipa', pos: 'photo', num: get2014SeqNum(team.name, 13) });
+        allPlayers.push({ id: idPhoto, group: gName, team: team.name, name: 'Foto de Equipa', pos: 'photo', num: get2014SeqNum(team.name, 2) });
         team.players.forEach((p, i) => {
           const pos = i < 3 ? 'GR' : i < 9 ? 'ZAG' : i < 14 ? 'MD' : 'AT';
           const id = `${gName}-${team.name}-${i}`;
@@ -2044,7 +2057,7 @@ function render() {
     const cwHours = diff > 0 ? Math.floor((diff % 86400000) / 3600000) : 0;
     
     let groupStats = '';
-    const statsTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : teams2018);
+    const statsTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : teams2018));
     for (const [gName, gData] of Object.entries(statsTeams)) {
       let gTotal = 0, gOwned = 0;
       for (const team of gData.teams) {
@@ -2447,6 +2460,69 @@ function render() {
     html += renderFwc2018Section(fwc2018Cidades, 'Cidades', '🗺️');
   }
 
+  if (currentAlbum === '2014' && (currentGroup === 'all' || currentGroup === 'FWC')) {
+    var fwc2014Intro = [
+      { name: 'Arte Panini', id: 'fwc2014-Intro Arte Panini', num: 0 },
+      { name: 'Troféu FIFA', id: 'fwc2014-Intro Troféu', num: 1 },
+      { name: 'Logotipo', id: 'fwc2014-Intro Logotipo', num: 2 },
+      { name: 'Mascote Fuleco', id: 'fwc2014-Intro Fuleco', num: 3 },
+      { name: 'Bola Brazuca', id: 'fwc2014-Intro Brazuca', num: 4 },
+      { name: 'Bandeiras', id: 'fwc2014-Intro Bandeiras', num: 5 },
+      { name: 'Formação', id: 'fwc2014-Intro Formação', num: 6 },
+      { name: 'Copa Confederações', id: 'fwc2014-Intro Confederações', num: 7 }
+    ];
+    var fwc2014Estadios = [
+      { name: 'Arena de São Paulo', id: 'fwc2014-Est. São Paulo', num: 8 },
+      { name: 'Maracanã', id: 'fwc2014-Est. Maracanã', num: 9 },
+      { name: 'Estádio Nacional', id: 'fwc2014-Est. Brasília', num: 10 },
+      { name: 'Arena Fonte Nova', id: 'fwc2014-Est. Salvador', num: 11 },
+      { name: 'Mineirão', id: 'fwc2014-Est. Belo Horizonte', num: 12 },
+      { name: 'Arena Pantanal', id: 'fwc2014-Est. Cuiabá', num: 13 },
+      { name: 'Arena da Amazônia', id: 'fwc2014-Est. Manaus', num: 14 },
+      { name: 'Arena Pernambuco', id: 'fwc2014-Est. Recife', num: 15 },
+      { name: 'Beira-Rio', id: 'fwc2014-Est. Porto Alegre', num: 16 },
+      { name: 'Arena Castelão', id: 'fwc2014-Est. Fortaleza', num: 17 },
+      { name: 'Arena das Dunas', id: 'fwc2014-Est. Natal', num: 18 },
+      { name: 'Arena de Curitiba', id: 'fwc2014-Est. Curitiba', num: 19 }
+    ];
+    var fwc2014Mapa = [
+      { name: 'Mapa 1', id: 'fwc2014-Mapa 1', num: 20 },
+      { name: 'Mapa 2', id: 'fwc2014-Mapa 2', num: 21 },
+      { name: 'Mapa 3', id: 'fwc2014-Mapa 3', num: 22 },
+      { name: 'Mapa 4', id: 'fwc2014-Mapa 4', num: 23 },
+      { name: 'Mapa 5', id: 'fwc2014-Mapa 5', num: 24 },
+      { name: 'Mapa 6', id: 'fwc2014-Mapa 6', num: 25 },
+      { name: 'Mapa 7', id: 'fwc2014-Mapa 7', num: 26 },
+      { name: 'Mapa 8', id: 'fwc2014-Mapa 8', num: 27 },
+      { name: 'Mapa 9', id: 'fwc2014-Mapa 9', num: 28 },
+      { name: 'Mapa 10', id: 'fwc2014-Mapa 10', num: 29 },
+      { name: 'Mapa 11', id: 'fwc2014-Mapa 11', num: 30 },
+      { name: 'Mapa 12', id: 'fwc2014-Mapa 12', num: 31 }
+    ];
+    function renderFwc2014Section(items, title, icon) {
+      const matchAny = !search || 'fwc'.includes(search) || 'world cup'.includes(search) || 'fifa'.includes(search) || title.toLowerCase().includes(search) || items.some(s => s.name.toLowerCase().includes(search));
+      const matchTabAny = currentTab === 'all' || items.some(s => { const st = getState(s.id); return (currentTab === 'owned' && st === 'owned') || (currentTab === 'missing' && (st === 'missing' || st === 'wanted')) || (currentTab === 'wanted' && st === 'wanted'); });
+      if (!matchAny || !matchTabAny) return '';
+      let h = '';
+      items.forEach(s => {
+        const st = getState(s.id);
+        const matchTab = currentTab === 'all' || (currentTab === 'owned' && st === 'owned') || (currentTab === 'missing' && (st === 'missing' || st === 'wanted')) || (currentTab === 'wanted' && st === 'wanted');
+        if (!matchTab) return;
+        const imgUrl = `https://www.laststicker.com/i/cards/1498/${s.num === 0 ? '00' : s.num}.jpg`;
+        h += `<div class="sticker fwc ${st}" data-id="${s.id}" onclick="openModal('${s.id}','${s.name}','fwc','FWC',${s.num})">
+          <img class="sticker-bg" loading="lazy" src="${imgUrl}" onerror="this.style.display='none'">
+          <div class="num">${String(s.num).padStart(2,'0')}</div>
+          <div class="name">${s.name}</div>
+        </div>`;
+      });
+      if (!h) return '';
+      return `<div style="font-size:0.8em;font-weight:800;color:var(--gold);padding:12px 0 4px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);margin-bottom:12px;">${icon} ${title}</div><div class="stickers">${h}</div>`;
+    }
+    html += renderFwc2014Section(fwc2014Intro, 'Introdução', '🏆');
+    html += renderFwc2014Section(fwc2014Estadios, 'Estádios', '🏟️');
+    html += renderFwc2014Section(fwc2014Mapa, 'Mapa', '🗺️');
+  }
+
   for (const gName of groups) {
     let groupHTML = '';
     const gData = activeTeams[gName];
@@ -2495,6 +2571,46 @@ function render() {
           if (!matchSearch || !matchTab) return;
           count++;
           const playerUrl = getStickerImageUrl(team.name, stickerNum);
+          playersHTML += `<div class="sticker ${state}" data-id="${id}" onclick="openModal('${id}','${p.replace(/'/g,"\\'")}','${pos}','${team.name.replace(/'/g,"\\'")}',${stickerNum})">
+            <img class="sticker-bg" loading="lazy" src="${playerUrl}" data-team="${team.name}" data-player="${p}" data-num="${stickerNum}" data-pn="${p}" onerror="handleStickerError(this)">
+            <div class="num">${stickerNum}</div>
+            <div class="pos">${pos}</div>
+            <div class="name">${p}</div>
+          </div>`;
+        });
+      } else if (currentAlbum === '2014') {
+        const badgeSeq = get2014SeqNum(team.name, 1);
+        if (matchTeam && matchTabBadge) {
+          count++;
+          const badgeUrl = getStickerImageUrl(team.name, 1);
+          playersHTML += `<div class="sticker badge ${stateBadge}" data-id="${idBadge}" onclick="openModal('${idBadge}','Emblema','EMB','${team.name.replace(/'/g,"\\'")}',${badgeSeq})">
+            <img class="sticker-bg" loading="lazy" src="${badgeUrl}" data-team="${team.name}" data-num="${badgeSeq}" onerror="handleBadgeError(this)">
+            <div class="num">${badgeSeq}</div>
+            <div class="pos">EMB</div>
+            <div class="name">${getFlagImg(team.name, 32)}</div>
+          </div>`;
+        }
+        const photoSeq = get2014SeqNum(team.name, 2);
+        if (matchTeam && matchTabPhoto) {
+          count++;
+          const photoUrl = getStickerImageUrl(team.name, 2);
+          playersHTML += `<div class="sticker photo ${statePhoto}" data-id="${idPhoto}" onclick="openModal('${idPhoto}','Foto de Equipa','photo','${team.name.replace(/'/g,"\\'")}',${photoSeq})">
+            <img class="sticker-bg" loading="lazy" src="${photoUrl}" data-team="${team.name}" data-num="${photoSeq}" onerror="handlePhotoError(this)">
+            <div class="num">${photoSeq}</div>
+            <div class="pos">EQP</div>
+            <div class="name">${getFlagImg(team.name, 32)}</div>
+          </div>`;
+        }
+        team.players.forEach((p, i) => {
+          const stickerNum = get2014SeqNum(team.name, i + 3);
+          const pos = i < 3 ? 'GR' : i < 9 ? 'ZAG' : i < 14 ? 'MD' : 'AT';
+          const id = `${gName}-${team.name}-${i}`;
+          const state = getState(id);
+          const matchSearch = !search || p.toLowerCase().includes(search) || team.name.toLowerCase().includes(search);
+          const matchTab = currentTab === 'all' || (currentTab === 'owned' && state === 'owned') || (currentTab === 'missing' && (state === 'missing' || state === 'wanted')) || (currentTab === 'wanted' && state === 'wanted');
+          if (!matchSearch || !matchTab) return;
+          count++;
+          const playerUrl = getStickerImageUrl(team.name, i + 3);
           playersHTML += `<div class="sticker ${state}" data-id="${id}" onclick="openModal('${id}','${p.replace(/'/g,"\\'")}','${pos}','${team.name.replace(/'/g,"\\'")}',${stickerNum})">
             <img class="sticker-bg" loading="lazy" src="${playerUrl}" data-team="${team.name}" data-player="${p}" data-num="${stickerNum}" data-pn="${p}" onerror="handleStickerError(this)">
             <div class="num">${stickerNum}</div>
@@ -2580,8 +2696,8 @@ function render() {
         <div class="selecao-body open"><div class="stickers">${playersHTML}</div></div></div>`;
     }
     if (groupHTML) {
-      const gFlags = activeTeams[gName].teams.map(t => getFlagImg(t.name, 24)).join(' ');
-      html += `<div style="font-size:0.8em;font-weight:800;color:var(--gold);padding:12px 0 4px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);margin-bottom:12px;">Grupo ${gName} <span style="display:inline-flex;gap:4px;vertical-align:middle;">${gFlags}</span></div>`;
+      const gFlags = activeTeams[gName].teams.map(t => getFlagImg(t.name, 28)).join(' ');
+      html += `<div style="font-size:0.8em;font-weight:800;color:var(--gold);padding:12px 0 4px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);margin-bottom:12px;display:flex;align-items:center;gap:8px;">Grupo ${gName} <span style="display:inline-flex;gap:4px;vertical-align:middle;">${gFlags}</span></div>`;
       html += groupHTML;
     }
   }
@@ -2732,7 +2848,7 @@ function toggleDotsMenu(el) {
 }
 
 function selectAllTeam(gName, teamName) {
-  const actT = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : teams2018);
+  const actT = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : teams2018));
   const team = actT[gName].teams.find(t => t.name === teamName);
   if (!team) return;
   setState(`${gName}-${teamName}-badge`, 'owned');
@@ -2743,7 +2859,7 @@ function selectAllTeam(gName, teamName) {
 }
 
 function removeAllTeam(gName, teamName) {
-  const actT = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : teams2018);
+  const actT = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : teams2018));
   const team = actT[gName].teams.find(t => t.name === teamName);
   if (!team) return;
   setState(`${gName}-${teamName}-badge`, 'missing');
@@ -2793,7 +2909,7 @@ function rebuildTeamOrders() {
   });
 }
 
-function getActiveTeamOrder() { return currentAlbum === '2026' ? teamOrder : currentAlbum === '2022' ? teamOrder2022 : teamOrder2018; }
+function getActiveTeamOrder() { return currentAlbum === '2026' ? teamOrder : (currentAlbum === '2022' ? teamOrder2022 : (currentAlbum === '2014' ? teamOrder2014 : teamOrder2018)); }
 
 function getStickerImageUrl(teamName, stickerPos) {
   if (currentAlbum === '2022') {
@@ -2805,6 +2921,11 @@ function getStickerImageUrl(teamName, stickerPos) {
     const seq = get2018SeqNum(teamName, stickerPos);
     if (!seq) return '';
     return `https://www.laststicker.com/i/cards/3852/${seq}.jpg`;
+  }
+  if (currentAlbum === '2014') {
+    const seq = get2014SeqNum(teamName, stickerPos);
+    if (!seq) return '';
+    return `https://www.laststicker.com/i/cards/1498/${seq}.jpg`;
   }
   const idx = teamOrder.indexOf(teamName);
   if (idx === -1) return '';
@@ -2818,6 +2939,14 @@ function get2018SeqNum(teamName, stickerPos) {
   if (stickerPos === 13) return 33 + idx * 20;
   return 34 + idx * 20 + (stickerPos - 3);
 }
+function get2014SeqNum(teamName, stickerPos) {
+  const idx = teamOrder2014.indexOf(teamName);
+  if (idx === -1) return 0;
+  if (stickerPos === 1) return 32 + idx * 19;
+  if (stickerPos === 2) return 33 + idx * 19;
+  const lp = stickerPos - 3;
+  return 34 + idx * 19 + lp;
+}
 function getStickerImageUrlPng(teamName, stickerPos) {
   if (currentAlbum === '2022') {
     const code = lsTeamCode[teamName];
@@ -2828,6 +2957,11 @@ function getStickerImageUrlPng(teamName, stickerPos) {
     const seq = get2018SeqNum(teamName, stickerPos);
     if (!seq) return '';
     return `https://www.laststicker.com/i/cards/3852/${seq}.jpg`;
+  }
+  if (currentAlbum === '2014') {
+    const seq = get2014SeqNum(teamName, stickerPos);
+    if (!seq) return '';
+    return `https://www.laststicker.com/i/cards/1498/${seq}.jpg`;
   }
   const idx = teamOrder.indexOf(teamName);
   if (idx === -1) return '';
@@ -2851,6 +2985,8 @@ function openModal(id, name, pos, team, num) {
       imgUrl = `https://www.laststicker.com/i/cards/7915/${fwcCode}.jpg`;
     } else if (currentAlbum === '2018') {
       imgUrl = `https://www.laststicker.com/i/cards/3852/${num === 0 ? '00' : num}.jpg`;
+    } else if (currentAlbum === '2014') {
+      imgUrl = `https://www.laststicker.com/i/cards/1498/${num === 0 ? '00' : num}.jpg`;
     } else {
       const fireNum = num + 1;
       imgUrl = `https://firebasestorage.googleapis.com/v0/b/centralcopa-prod.firebasestorage.app/o/public%2Fstickers%2FWC2026_BR%2F${fireNum}.jpg?alt=media`;
@@ -2862,13 +2998,15 @@ function openModal(id, name, pos, team, num) {
     }
   } else if (currentAlbum === '2018') {
     imgUrl = `https://www.laststicker.com/i/cards/3852/${num}.jpg`;
+  } else if (currentAlbum === '2014') {
+    imgUrl = `https://www.laststicker.com/i/cards/1498/${num}.jpg`;
   } else {
     imgUrl = getStickerImageUrl(team, num);
   }
   if (imgUrl) {
     bigImgTag.src = imgUrl;
     bigImg.style.display = 'flex';
-    const pngUrl = (pos === 'fwc' || pos === 'FWC') ? imgUrl.replace('.jpg', '.png') : (pos === 'Coca-Cola' ? imgUrl.replace('.jpg', '.png') : (currentAlbum === '2018' ? imgUrl : getStickerImageUrlPng(team, num)));
+    const pngUrl = (pos === 'fwc' || pos === 'FWC') ? imgUrl.replace('.jpg', '.png') : (pos === 'Coca-Cola' ? imgUrl.replace('.jpg', '.png') : ((currentAlbum === '2018' || currentAlbum === '2014') ? imgUrl : getStickerImageUrlPng(team, num)));
     bigImgTag.onerror = function() {
       if (pngUrl && bigImgTag.src !== pngUrl) {
         bigImgTag.src = pngUrl;
@@ -2986,10 +3124,22 @@ function getMissingByTeam() {
     if (mE.length) map['Estádios'] = mE;
     if (mC.length) map['Cidades'] = mC;
   }
+  if (currentAlbum === '2014') {
+    const fwc2014Intro = ['fwc2014-Intro Arte Panini','fwc2014-Intro Troféu','fwc2014-Intro Logotipo','fwc2014-Intro Fuleco','fwc2014-Intro Brazuca','fwc2014-Intro Bandeiras','fwc2014-Intro Formação','fwc2014-Intro Confederações'];
+    const fwc2014Estadios = ['fwc2014-Est. São Paulo','fwc2014-Est. Maracanã','fwc2014-Est. Brasília','fwc2014-Est. Salvador','fwc2014-Est. Belo Horizonte','fwc2014-Est. Cuiabá','fwc2014-Est. Manaus','fwc2014-Est. Recife','fwc2014-Est. Porto Alegre','fwc2014-Est. Fortaleza','fwc2014-Est. Natal','fwc2014-Est. Curitiba'];
+    const fwc2014Mapa = ['fwc2014-Mapa 1','fwc2014-Mapa 2','fwc2014-Mapa 3','fwc2014-Mapa 4','fwc2014-Mapa 5','fwc2014-Mapa 6','fwc2014-Mapa 7','fwc2014-Mapa 8','fwc2014-Mapa 9','fwc2014-Mapa 10','fwc2014-Mapa 11','fwc2014-Mapa 12'];
+    const mI = []; fwc2014Intro.forEach((id, i) => { if (getState(id) === 'missing') mI.push(String(i).padStart(2, '0')); });
+    const mE = []; fwc2014Estadios.forEach((id, i) => { if (getState(id) === 'missing') mE.push(String(i + 8).padStart(2, '0')); });
+    const mM = []; fwc2014Mapa.forEach((id, i) => { if (getState(id) === 'missing') mM.push(String(i + 20).padStart(2, '0')); });
+    if (mI.length) map['Introdução'] = mI;
+    if (mE.length) map['Estádios'] = mE;
+    if (mM.length) map['Mapa'] = mM;
+  }
   if (nums1.length) map['FWC 00-08'] = nums1;
-  const shareTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : teams2018);
+  const shareTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : teams2018));
   const is2022 = currentAlbum === '2022';
   const is2018 = currentAlbum === '2018';
+  const is2014 = currentAlbum === '2014';
   for (const [gName, gData] of Object.entries(shareTeams)) {
     for (const team of gData.teams) {
       const nums = [];
@@ -3010,6 +3160,15 @@ function getMissingByTeam() {
         team.players.forEach((p, i) => {
           const id = `${gName}-${team.name}-${i}`;
           if (getState(id) === 'missing') nums.push(get2018SeqNum(team.name, i + 3));
+        });
+      } else if (is2014) {
+        const badge = `${gName}-${team.name}-badge`;
+        if (getState(badge) === 'missing') nums.push(get2014SeqNum(team.name, 1));
+        const photo = `${gName}-${team.name}-photo`;
+        if (getState(photo) === 'missing') nums.push(get2014SeqNum(team.name, 2));
+        team.players.forEach((p, i) => {
+          const id = `${gName}-${team.name}-${i}`;
+          if (getState(id) === 'missing') nums.push(get2014SeqNum(team.name, i + 3));
         });
       } else {
         const badge = `${gName}-${team.name}-badge`;
@@ -3052,9 +3211,10 @@ function getMissingByTeam() {
 
 function getWantedByTeam() {
   const map = {};
-  const shareTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : teams2018);
+  const shareTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : teams2018));
   const is2022 = currentAlbum === '2022';
   const is2018 = currentAlbum === '2018';
+  const is2014 = currentAlbum === '2014';
   for (const [gName, gData] of Object.entries(shareTeams)) {
     for (const team of gData.teams) {
       const nums = [];
@@ -3075,6 +3235,15 @@ function getWantedByTeam() {
         team.players.forEach((p, i) => {
           const id = `${gName}-${team.name}-${i}`;
           if (getState(id) === 'wanted') nums.push(get2018SeqNum(team.name, i + 3));
+        });
+      } else if (is2014) {
+        const badge = `${gName}-${team.name}-badge`;
+        if (getState(badge) === 'wanted') nums.push(get2014SeqNum(team.name, 1));
+        const photo = `${gName}-${team.name}-photo`;
+        if (getState(photo) === 'wanted') nums.push(get2014SeqNum(team.name, 2));
+        team.players.forEach((p, i) => {
+          const id = `${gName}-${team.name}-${i}`;
+          if (getState(id) === 'wanted') nums.push(get2014SeqNum(team.name, i + 3));
         });
       } else {
         const badge = `${gName}-${team.name}-badge`;
@@ -3136,6 +3305,17 @@ function getWantedByTeam() {
     legendIds.forEach(s => { if (getState(s.id) === 'wanted') legendWanted.push(s.num); });
     if (legendWanted.length) map['Legends'] = legendWanted;
   }
+  if (currentAlbum === '2014') {
+    const fwc2014Intro = ['fwc2014-Intro Arte Panini','fwc2014-Intro Troféu','fwc2014-Intro Logotipo','fwc2014-Intro Fuleco','fwc2014-Intro Brazuca','fwc2014-Intro Bandeiras','fwc2014-Intro Formação','fwc2014-Intro Confederações'];
+    const fwc2014Estadios = ['fwc2014-Est. São Paulo','fwc2014-Est. Maracanã','fwc2014-Est. Brasília','fwc2014-Est. Salvador','fwc2014-Est. Belo Horizonte','fwc2014-Est. Cuiabá','fwc2014-Est. Manaus','fwc2014-Est. Recife','fwc2014-Est. Porto Alegre','fwc2014-Est. Fortaleza','fwc2014-Est. Natal','fwc2014-Est. Curitiba'];
+    const fwc2014Mapa = ['fwc2014-Mapa 1','fwc2014-Mapa 2','fwc2014-Mapa 3','fwc2014-Mapa 4','fwc2014-Mapa 5','fwc2014-Mapa 6','fwc2014-Mapa 7','fwc2014-Mapa 8','fwc2014-Mapa 9','fwc2014-Mapa 10','fwc2014-Mapa 11','fwc2014-Mapa 12'];
+    const wI = []; fwc2014Intro.forEach((id, i) => { if (getState(id) === 'wanted') wI.push(String(i).padStart(2, '0')); });
+    const wE = []; fwc2014Estadios.forEach((id, i) => { if (getState(id) === 'wanted') wE.push(String(i + 8).padStart(2, '0')); });
+    const wM = []; fwc2014Mapa.forEach((id, i) => { if (getState(id) === 'wanted') wM.push(String(i + 20).padStart(2, '0')); });
+    if (wI.length) map['Introdução'] = wI;
+    if (wE.length) map['Estádios'] = wE;
+    if (wM.length) map['Mapa'] = wM;
+  }
   return map;
 }
 
@@ -3145,7 +3325,7 @@ function getShareText() {
   const total = allPlayers.filter(p => getState(p.id) === 'owned').length;
   const totalMissing = Object.values(map).reduce((s, a) => s + a.length, 0);
   const totalWanted = Object.values(wantedMap).reduce((s, a) => s + a.length, 0);
-  const albumYear = currentAlbum === '2022' ? '22' : (currentAlbum === '2018' ? '18' : '26');
+  const albumYear = currentAlbum === '2022' ? '22' : (currentAlbum === '2018' ? '18' : (currentAlbum === '2014' ? '14' : '26'));
   if (!totalMissing && !totalWanted) return `Fifarinhas ${albumYear} - Completei todos os cromos! ⚽🏆`;
   const lines = [`Fifarinhas ${albumYear} (${total}/${allPlayers.length} cromos)`];
   if (totalMissing) {
@@ -3253,7 +3433,7 @@ async function loadAdminPanel() {
     const userMap = {};
     userSnap.docs.forEach(d => { userMap[d.id] = d.data(); });
     const users = [];
-    const statesField = currentAlbum === '2022' ? 'playerStates2022' : (currentAlbum === '2018' ? 'playerStates2018' : 'playerStates');
+    const statesField = currentAlbum === '2022' ? 'playerStates2022' : (currentAlbum === '2018' ? 'playerStates2018' : (currentAlbum === '2014' ? 'playerStates2014' : 'playerStates'));
     const albumLabel = currentAlbum === '2026' ? '2026' : (currentAlbum === '2022' ? '2022' : '2018');
     accSnap.docs.forEach(d => {
       const acc = d.data();
@@ -3437,6 +3617,7 @@ function switchAlbum(year) {
   loadActivePlayerStates();
   if (year === '2026') teams = teams2026;
   else if (year === '2022') teams = teams2022;
+  else if (year === '2014') teams = teams2014;
   else teams = teams2018;
   allPlayers = [];
   currentGroup = 'all';
@@ -3452,6 +3633,7 @@ function updateHeaderAlbum() {
   if (h1) {
     if (currentAlbum === '2022') h1.innerHTML = 'FIFA<span> RINHAS 22</span>';
     else if (currentAlbum === '2018') h1.innerHTML = 'FIFA<span> RINHAS 18</span>';
+    else if (currentAlbum === '2014') h1.innerHTML = 'FIFA<span> RINHAS 14</span>';
     else h1.innerHTML = 'FIFA<span> RINHAS 26</span>';
   }
 }
@@ -3471,13 +3653,13 @@ function buildAlbumList() {
   let h = '';
   wcAlbums.forEach(a => {
     const isCurrent = a.year === currentAlbum;
-    const activeStates = a.year === '2026' ? _states2026 : (a.year === '2022' ? _states2022 : (a.year === '2018' ? _states2018 : {}));
+    const activeStates = a.year === '2026' ? _states2026 : (a.year === '2022' ? _states2022 : (a.year === '2018' ? _states2018 : (a.year === '2014' ? _states2014 : {})));
     const owned = currentUser && activeStates ? Object.keys(activeStates).filter(k => activeStates[k] === 'owned').length : 0;
     const pct = a.total > 0 ? Math.round((owned / a.total) * 100) : 0;
     const thumb = a.img
       ? '<img src="' + a.img + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span style=font-size:1.6em>⚽</span>\'">'
       : '<span style="font-size:1.6em">⚽</span>';
-    const canSwitch = a.year === '2026' || a.year === '2022' || a.year === '2018';
+    const canSwitch = a.year === '2026' || a.year === '2022' || a.year === '2018' || a.year === '2014';
     const clickAction = canSwitch ? "switchAlbum('" + a.year + "')" : "alert('Álbum " + a.year + " — Em breve!')";
     h += '<div class="album-opt ' + (isCurrent ? 'current' : '') + '" onclick="' + clickAction + '">'
       + '<div class="album-thumb">' + thumb + '</div>'
