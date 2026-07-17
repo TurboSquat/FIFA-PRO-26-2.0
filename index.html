@@ -8,8 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="wc2022.js"></script>
-<script src="wc2018.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCPWDIHK5yeEEW75lY_Y15Ir23hXagKhy4",
@@ -1086,27 +1084,22 @@ let teams = {
 const teams2026 = teams;
 
 const teams2022 = {};
-if (typeof wc2022 !== 'undefined') {
-  wc2022.forEach(team => {
-    if (!teams2022[team.group]) teams2022[team.group] = { teams: [] };
-    teams2022[team.group].teams.push({
-      name: team.name,
-      flag: team.flag,
-      players: team.players
-    });
-  });
-}
-
 const teams2018 = {};
-if (typeof wc2018 !== 'undefined') {
-  wc2018.forEach(team => {
-    if (!teams2018[team.group]) teams2018[team.group] = { teams: [] };
-    teams2018[team.group].teams.push({
-      name: team.name,
-      flag: team.flag,
-      players: team.players
-    });
-  });
+
+async function loadTeamsFromFirestore() {
+  const years = ['2018', '2022'];
+  for (const year of years) {
+    const target = year === '2018' ? teams2018 : teams2022;
+    const groups = ['A','B','C','D','E','F','G','H'];
+    for (const g of groups) {
+      try {
+        const snap = await db.collection('teams').doc(`${year}_${g}`).get();
+        if (snap.exists) {
+          target[g] = snap.data();
+        }
+      } catch(e) {}
+    }
+  }
 }
 
 const fwcStickers = [
@@ -1149,17 +1142,6 @@ const cocaStickers = [
 
 const posLabels = { GK: "GR", DF: "ZAG", MF: "MD", FW: "AT" };
 
-const lsTeamCode = {
-  "Catar":"qat","Equador":"ecu","Senegal":"sen","Holanda":"ned",
-  "Inglaterra":"eng","Irã":"irn","EUA":"usa","País de Gales":"wal",
-  "Argentina":"arg","Arábia Saudita":"ksa","México":"mex","Polónia":"pol",
-  "França":"fra","Austrália":"aus","Dinamarca":"den","Tunísia":"tun",
-  "Espanha":"esp","Costa Rica":"crc","Alemanha":"ger","Japão":"jpn",
-  "Bélgica":"bel","Canadá":"can","Marrocos":"mar","Croácia":"cro",
-  "Brasil":"bra","Sérvia":"srb","Suíça":"sui","Camarões":"cmr",
-  "Portugal":"por","Gana":"gha","Uruguai":"uru","Coreia do Sul":"kor"
-};
-
 const lsTeamCode2018 = {
   "Rússia":"rus","Arábia Saudita":"ksa","Egito":"egy","Uruguai":"uru",
   "Portugal":"por","Espanha":"esp","Marrocos":"mar","Irã":"irn",
@@ -1174,7 +1156,7 @@ const lsTeamCode2018 = {
 const lsTeamCode = {
   "Catar":"qat","Equador":"ecu","Senegal":"sen","Holanda":"ned",
   "Inglaterra":"eng","Irã":"irn","EUA":"usa","País de Gales":"wal",
-  "Argentina":"arg","Arábia Saudita":"ksa","México":"mex","Polônia":"pol",
+  "Argentina":"arg","Arábia Saudita":"ksa","México":"mex","Polónia":"pol",
   "França":"fra","Austrália":"aus","Dinamarca":"den","Tunísia":"tun",
   "Espanha":"esp","Costa Rica":"crc","Alemanha":"ger","Japão":"jpn",
   "Bélgica":"bel","Canadá":"can","Marrocos":"mar","Croácia":"cro",
@@ -1197,6 +1179,7 @@ const teamIso = {
   "Inglaterra":"gb","Croácia":"hr","Gana":"gh","Panamá":"pa",
   "Holanda":"nl","EUA":"us","País de Gales":"gb","Polônia":"pl",
   "Dinamarca":"dk","Sérvia":"rs","Camarões":"cm","Costa Rica":"cr",
+  "Rússia":"ru","Peru":"pe","Islândia":"is","Nigéria":"ng",
   "Coreia do Sul":"kr","Arábia Saudita":"sa"
 };
 function getFlagImg(name, size) {
@@ -1238,24 +1221,6 @@ const teamColors2018 = {
 };
 
 const teamColors2026 = {
-  "México":["#006847","#CE1126","#FFF"],"África do Sul":["#007A4D","#FFB81C","#FFF"],"Coreia do Sul":["#FFF","#003478","#C60C30"],"República Tcheca":["#FFF","#D71A1A"],
-  "Canadá":["#FF0000","#FFF"],"Bósnia e Herzegovina":["#002395","#FFD700","#FFF"],"Catar":["#8B1A4A","#FFF"],"Suíça":["#FF0000","#FFF"],
-  "Brasil":["#009739","#FEDD00","#012169"],"Marrocos":["#C1272D","#006233","#FFF"],"Haití":["#00209F","#D21034"],"Escócia":["#0065BD","#FFF"],
-  "Estados Unidos":["#002868","#BF0A30","#FFF"],"Paraguai":["#D52B1E","#FFF","#0038A8"],"Austrália":["#00008B","#FFF"],"Turquia":["#E30A17","#FFF"],
-  "Alemanha":["#000","#DD0000","#FFCC00"],"Curaçao":["#FFD700","#0033A0","#FFF"],"Costa do Marfim":["#FF8200","#FFF","#009E60"],"Equador":["#FCD116","#003DA5"],
-  "Países Baixos":["#FF6600","#FFF"],"Japão":["#FFF","#BC002D"],"Suécia":["#006AA7","#FECC00"],"Tunísia":["#E70013","#FFF"],
-  "Bélgica":["#000","#FDDA24","#ED2939"],"Egito":["#CE1126","#000","#FFF"],"Irã":["#239F40","#DA0000","#FFF"],"Nova Zelândia":["#000","#FFF"],
-  "Espanha":["#AA151B","#F1BF00","#FFF"],"Cabo Verde":["#003893","#FFD700","#CE1126"],"Arábia Saudita":["#006C35","#FFF"],"Uruguai":["#FFF","#5DCBF9","#000"],
-  "França":["#002395","#ED2939","#FFF"],"Senegal":["#00853F","#F7D618","#E31B23"],"Iraque":["#CE1126","#FFF","#000","#007A3D"],"Noruega":["#EF2B2D","#0028A8","#FFF"],
-  "Argentina":["#74ACDF","#FFF"],"Argélia":["#006233","#FFF"],"Áustria":["#ED2939","#FFF"],"Jordânia":["#CE1126","#FFF","#000","#007A3D"],
-  "Portugal":["#006600","#FF0000","#FFF"],"Congo DR":["#007A3D","#FFF","#CE1126"],"Uzbequistão":["#0096D6","#FFF","#CE1126"],"Colômbia":["#FCD116","#003087","#CE1126"],
-  "Inglaterra":["#FFF","#C8102E"],"Croácia":["#171796","#FF0000","#FFF"],"Gana":["#006B3F","#FCD116","#000"],"Panamá":["#002B7F","#FFF","#CE1126"],
-  "Holanda":["#FF6600","#FFF"],"EUA":["#002868","#BF0A30","#FFF"],"País de Gales":["#FFF","#D4003C"],"Polônia":["#FFF","#DC143C"],
-  "Dinamarca":["#C8102E","#FFF"],"Sérvia":["#C6363C","#0C4076","#FFF"],"Camarões":["#007A5E","#CE1126","#FCD116"],"Costa Rica":["#002B7F","#FFF"],
-  "Coreia do Sul":["#FFF","#003478","#C60C30"],"Arábia Saudita":["#006C35","#FFF"]
-};
-
-const teamColors2026 = {
   "México":["#006847","#CE1126","#FFF"],"África do Sul":["#007A4D","#FFB81C","#FFF"],"Coreia do Sul":["#FFF","#003478","#C60C30"],"República Tcheca":["#FFF","#D7141A2323","#11457E"],
   "Canadá":["#FF0000","#FFF"],"Bósnia e Herzegovina":["#0033A0","#FFF","#FCD116"],"Catar":["#8B1A4A","#FFF"],"Suíça":["#FF0000","#FFF"],
   "Brasil":["#009739","#FEDD00","#012169"],"Marrocos":["#C1272D","#006233","#FFF"],"Haití":["#00209F","#CE1126"],"Escócia":["#0065BD","#FFF"],
@@ -1270,7 +1235,7 @@ const teamColors2026 = {
   "Inglaterra":["#FFF","#C8102E"],"Croácia":["#171796","#FF0000","#FFF"],"Gana":["#006B3F","#FCD116","#000"],"Panamá":["#002B7F","#FFF","#CE1126"],
   "Holanda":["#FF6600","#FFF"],"EUA":["#002868","#BF0A30","#FFF"],"País de Gales":["#FFF","#D4003C"],"Polônia":["#FFF","#DC143C"],
   "Dinamarca":["#C8102E","#FFF"],"Sérvia":["#C6363C","#0C4076","#FFF"],"Camarões":["#007A5E","#CE1126","#FCD116"],
-  "Costa Rica":["#002B7F","#FFF"],"Coreia do Sul":["#FFF","#003478","#C60C30"],"Arábia Saudita":["#006C35","#FFF"]
+  "Costa Rica":["#002B7F","#FFF"],"Coreia do Sul":["#FFF","#003478","#C60C30"]
 };
 
 const playerFallback = {
@@ -1299,7 +1264,11 @@ function handleStickerError(img) {
   var num = img.getAttribute('data-num');
   if (!img.getAttribute('data-tried')) {
     img.setAttribute('data-tried','1');
-    img.src = getStickerImageUrlPng(team, parseInt(num));
+    if (currentAlbum === '2018') {
+      img.src = `https://www.laststicker.com/i/cards/3852/${num}.png`;
+    } else {
+      img.src = getStickerImageUrlPng(team, parseInt(num));
+    }
     return;
   }
   img.style.display = 'none';
@@ -1743,8 +1712,11 @@ function changeProfilePhoto(input) {
   reader.readAsDataURL(file);
 }
 
-function init() {
+async function init() {
   if (!currentUser) return;
+  if (currentAlbum === '2018' || currentAlbum === '2022') {
+    await loadTeamsFromFirestore();
+  }
   if (allPlayers.length === 0) {
   let num = 1;
   const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : teams2018);
@@ -1797,54 +1769,81 @@ function init() {
     });
   }
   if (currentAlbum === '2018') {
-    var fwc2018All = [
-      { name: 'Panini', desc: 'Panini', icon: '🏷️' },
-      { name: 'FIFA Fair Play', desc: 'FIFA Fair Play', icon: '🏛️' },
-      { name: 'Troféu FIFA', desc: 'Troféu FIFA', icon: '🏆' },
-      { name: 'Style Guide 1', desc: 'Style Guide 1', icon: '🎨' },
-      { name: 'Style Guide 2', desc: 'Style Guide 2', icon: '🎨' },
-      { name: 'Logótipo FIFA 1', desc: 'Logótipo FIFA 1', icon: '🏅' },
-      { name: 'Logótipo FIFA 2', desc: 'Logótipo FIFA 2', icon: '🏅' },
-      { name: 'Bola Oficial', desc: 'Bola Telstar 18', icon: '⚽' },
-      { name: 'Ekaterinburg Arena', desc: 'Est. Ekaterinburg', icon: '🏟️' },
-      { name: 'Kaliningrad Stadium', desc: 'Est. Kaliningrad', icon: '🏟️' },
-      { name: 'Kazan Arena', desc: 'Est. Kazan', icon: '🏟️' },
-      { name: 'Spartak Stadium', desc: 'Est. Spartak', icon: '🏟️' },
-      { name: 'Nizhny Novgorod Stadium', desc: 'Est. Nizhny Novgorod', icon: '🏟️' },
-      { name: 'Luzhniki Stadium', desc: 'Est. Luzhniki', icon: '🏟️' },
-      { name: 'Rostov Arena', desc: 'Est. Rostov', icon: '🏟️' },
-      { name: 'Saint Petersburg Stadium', desc: 'Est. São Petersburgo', icon: '🏟️' },
-      { name: 'Samara Arena', desc: 'Est. Samara', icon: '🏟️' },
-      { name: 'Mordovia Arena', desc: 'Est. Mordovia', icon: '🏟️' },
-      { name: 'Fisht Stadium', desc: 'Est. Fisht', icon: '🏟️' },
-      { name: 'Volgograd Arena', desc: 'Est. Volgograd', icon: '🏟️' },
-      { name: 'Moscou 1', desc: 'Moscou 1', icon: '🏙️' },
-      { name: 'Moscou 2', desc: 'Moscou 2', icon: '🏙️' },
-      { name: 'Kaliningrad', desc: 'Kaliningrad', icon: '🏙️' },
-      { name: 'São Petersburgo', desc: 'São Petersburgo', icon: '🏙️' },
-      { name: 'Sochi', desc: 'Sochi', icon: '🏙️' },
-      { name: 'Rostov-on-Don', desc: 'Rostov-on-Don', icon: '🏙️' },
-      { name: 'Volgograd', desc: 'Volgograd', icon: '🏙️' },
-      { name: 'Kazan', desc: 'Kazan', icon: '🏙️' },
-      { name: 'Nizhny Novgorod', desc: 'Nizhny Novgorod', icon: '🏙️' },
-      { name: 'Samara', desc: 'Samara', icon: '🏙️' },
-      { name: 'Ekaterinburg', desc: 'Ekaterinburg', icon: '🏙️' },
-      { name: 'Saransk', desc: 'Saransk', icon: '🏙️' }
+    var fwc2018MundialAll = [
+      { name: 'Panini', id: 'fwc2018-Mundial Panini', num: 0 },
+      { name: 'FIFA Fair Play', id: 'fwc2018-Mundial FIFA Fair Play', num: 1 },
+      { name: 'Troféu FIFA World Cup', id: 'fwc2018-Mundial Troféu', num: 2 },
+      { name: 'Gráfico 1', id: 'fwc2018-Mundial Gráfico 1', num: 3 },
+      { name: 'Gráfico 2', id: 'fwc2018-Mundial Gráfico 2', num: 4 },
+      { name: 'Logo 1', id: 'fwc2018-Mundial Logo 1', num: 5 },
+      { name: 'Logo 2', id: 'fwc2018-Mundial Logo 2', num: 6 },
+      { name: 'Bola Oficial', id: 'fwc2018-Mundial Bola Oficial', num: 7 }
     ];
-    fwc2018All.forEach(s => {
-      allPlayers.push({ id: `fwc2018-${s.desc}`, group: 'FWC', team: 'FWC', name: s.name, pos: 'fwc', num });
-      num++;
+    var fwc2018EstadiosAll = [
+      { name: 'Ekaterinburg Arena', id: 'fwc2018-Est. Ekaterinburg Arena', num: 8 },
+      { name: 'Kaliningrad Stadium', id: 'fwc2018-Est. Kaliningrad Stadium', num: 9 },
+      { name: 'Kazan Arena', id: 'fwc2018-Est. Kazan Arena', num: 10 },
+      { name: 'Spartak Stadium', id: 'fwc2018-Est. Spartak Stadium', num: 11 },
+      { name: 'Nizhny Novgorod Stadium', id: 'fwc2018-Est. Nizhny Novgorod', num: 12 },
+      { name: 'Luzhniki Stadium', id: 'fwc2018-Est. Luzhniki', num: 13 },
+      { name: 'Rostov Arena', id: 'fwc2018-Est. Rostov Arena', num: 14 },
+      { name: 'Saint Petersburg Stadium', id: 'fwc2018-Est. Saint Petersburg', num: 15 },
+      { name: 'Samara Arena', id: 'fwc2018-Est. Samara Arena', num: 16 },
+      { name: 'Mordovia Arena', id: 'fwc2018-Est. Mordovia Arena', num: 17 },
+      { name: 'Fisht Stadium', id: 'fwc2018-Est. Fisht Stadium', num: 18 },
+      { name: 'Volgograd Arena', id: 'fwc2018-Est. Volgograd Arena', num: 19 }
+    ];
+    var fwc2018CidadesAll = [
+      { name: 'Moscow 1', id: 'fwc2018-Cid. Moscow 1', num: 20 },
+      { name: 'Moscow 2', id: 'fwc2018-Cid. Moscow 2', num: 21 },
+      { name: 'Kaliningrad', id: 'fwc2018-Cid. Kaliningrad', num: 22 },
+      { name: 'Saint Petersburg', id: 'fwc2018-Cid. Saint Petersburg', num: 23 },
+      { name: 'Sochi', id: 'fwc2018-Cid. Sochi', num: 24 },
+      { name: 'Rostov-on-Don', id: 'fwc2018-Cid. Rostov-on-Don', num: 25 },
+      { name: 'Volgograd', id: 'fwc2018-Cid. Volgograd', num: 26 },
+      { name: 'Kazan', id: 'fwc2018-Cid. Kazan', num: 27 },
+      { name: 'Nizhny Novgorod', id: 'fwc2018-Cid. Nizhny Novgorod', num: 28 },
+      { name: 'Samara', id: 'fwc2018-Cid. Samara', num: 29 },
+      { name: 'Yekaterinburg', id: 'fwc2018-Cid. Yekaterinburg', num: 30 },
+      { name: 'Saransk', id: 'fwc2018-Cid. Saransk', num: 31 }
+    ];
+    [...fwc2018MundialAll, ...fwc2018EstadiosAll, ...fwc2018CidadesAll].forEach(s => {
+      allPlayers.push({ id: s.id, group: 'FWC', team: 'FWC', name: s.name, pos: 'fwc', num: s.num });
+    });
+    var fwc2018LegendsAll = [
+      { name: 'Brasil 1958', id: 'fwc2018-Legends Brasil 1958', num: 672 },
+      { name: 'Alemanha 2014', id: 'fwc2018-Legends Alemanha 2014', num: 673 },
+      { name: 'Itália 1982', id: 'fwc2018-Legends Itália 1982', num: 674 },
+      { name: 'Uruguai 1930', id: 'fwc2018-Legends Uruguai 1930', num: 675 },
+      { name: 'Argentina 1986', id: 'fwc2018-Legends Argentina 1986', num: 676 },
+      { name: 'Inglaterra 1966', id: 'fwc2018-Legends Inglaterra 1966', num: 677 },
+      { name: 'França 1998', id: 'fwc2018-Legends França 1998', num: 678 },
+      { name: 'Espanha 2010', id: 'fwc2018-Legends Espanha 2010', num: 679 },
+      { name: 'Pelé', id: 'fwc2018-Legends Pelé', num: 680 },
+      { name: 'Miroslav Klose', id: 'fwc2018-Legends Miroslav Klose', num: 681 }
+    ];
+    fwc2018LegendsAll.forEach(s => {
+      allPlayers.push({ id: s.id, group: 'FWC', team: 'Legends', name: s.name, pos: 'fwc', num: s.num });
     });
   }
   for (const [gName, gData] of Object.entries(activeTeams)) {
     for (const team of gData.teams) {
-      if (currentAlbum === '2022' || currentAlbum === '2018') {
-        const is2018 = currentAlbum === '2018';
+      if (currentAlbum === '2018') {
+        const idBadge = `${gName}-${team.name}-badge`;
+        allPlayers.push({ id: idBadge, group: gName, team: team.name, name: 'Emblema', pos: 'badge', num: get2018SeqNum(team.name, 1) });
         const idPhoto = `${gName}-${team.name}-photo`;
-        allPlayers.push({ id: idPhoto, group: gName, team: team.name, name: is2018 ? 'Foto de Equipa' : 'Foto de Equipa', pos: 'photo', num });
+        allPlayers.push({ id: idPhoto, group: gName, team: team.name, name: 'Foto de Equipa', pos: 'photo', num: get2018SeqNum(team.name, 13) });
+        team.players.forEach((p, i) => {
+          const pos = i < 3 ? 'GR' : i < 9 ? 'ZAG' : i < 14 ? 'MD' : 'AT';
+          const id = `${gName}-${team.name}-${i}`;
+          allPlayers.push({ id, group: gName, team: team.name, name: p, pos, num: get2018SeqNum(team.name, i + 3) });
+        });
+      } else if (currentAlbum === '2022') {
+        const idPhoto = `${gName}-${team.name}-photo`;
+        allPlayers.push({ id: idPhoto, group: gName, team: team.name, name: 'Foto de Equipa', pos: 'photo', num });
         num++;
         const idBadge = `${gName}-${team.name}-badge`;
-        allPlayers.push({ id: idBadge, group: gName, team: team.name, name: is2018 ? 'Emblema' : 'Emblema', pos: 'badge', num });
+        allPlayers.push({ id: idBadge, group: gName, team: team.name, name: 'Emblema', pos: 'badge', num });
         num++;
         team.players.forEach((p, i) => {
           const pos = i < 3 ? 'GR' : i < 9 ? 'ZAG' : i < 14 ? 'MD' : 'AT';
@@ -2290,13 +2289,93 @@ function render() {
           html += `<div style="font-size:0.7em;font-weight:600;color:var(--muted);padding:8px 0 4px;letter-spacing:0.5px;">${s.icon} ${s.cat}</div>`;
         }
         const displayNum = String(i).padStart(2, '0');
+        const fwcCode = i === 0 ? '00' : `fwc${i}`;
+        const fwcImgUrl = `https://www.laststicker.com/i/cards/7915/${fwcCode}.jpg`;
         fwcHTML += `<div class="sticker fwc ${st}" data-id="${s.id}" onclick="openModal('${s.id}','${s.name}','fwc','FWC',${i})">
+          <img class="sticker-bg" loading="lazy" src="${fwcImgUrl}" onerror="this.style.display='none'">
           <div class="num">${displayNum}</div>
           <div class="name">${s.name}</div>
         </div>`;
       });
       if (fwcHTML) html += `<div class="stickers">${fwcHTML}</div>`;
     }
+  }
+
+
+
+  if (currentAlbum === '2018' && (currentGroup === 'all' || currentGroup === 'FWC')) {
+    var fwc2018Mundial = [
+      { name: 'Panini', id: 'fwc2018-Mundial Panini', num: 0 },
+      { name: 'FIFA Fair Play', id: 'fwc2018-Mundial FIFA Fair Play', num: 1 },
+      { name: 'Troféu FIFA World Cup', id: 'fwc2018-Mundial Troféu', num: 2 },
+      { name: 'Gráfico 1', id: 'fwc2018-Mundial Gráfico 1', num: 3 },
+      { name: 'Gráfico 2', id: 'fwc2018-Mundial Gráfico 2', num: 4 },
+      { name: 'Logo 1', id: 'fwc2018-Mundial Logo 1', num: 5 },
+      { name: 'Logo 2', id: 'fwc2018-Mundial Logo 2', num: 6 },
+      { name: 'Bola Oficial', id: 'fwc2018-Mundial Bola Oficial', num: 7 }
+    ];
+    var fwc2018Estadios = [
+      { name: 'Ekaterinburg Arena', id: 'fwc2018-Est. Ekaterinburg Arena', num: 8 },
+      { name: 'Kaliningrad Stadium', id: 'fwc2018-Est. Kaliningrad Stadium', num: 9 },
+      { name: 'Kazan Arena', id: 'fwc2018-Est. Kazan Arena', num: 10 },
+      { name: 'Spartak Stadium', id: 'fwc2018-Est. Spartak Stadium', num: 11 },
+      { name: 'Nizhny Novgorod Stadium', id: 'fwc2018-Est. Nizhny Novgorod', num: 12 },
+      { name: 'Luzhniki Stadium', id: 'fwc2018-Est. Luzhniki', num: 13 },
+      { name: 'Rostov Arena', id: 'fwc2018-Est. Rostov Arena', num: 14 },
+      { name: 'Saint Petersburg Stadium', id: 'fwc2018-Est. Saint Petersburg', num: 15 },
+      { name: 'Samara Arena', id: 'fwc2018-Est. Samara Arena', num: 16 },
+      { name: 'Mordovia Arena', id: 'fwc2018-Est. Mordovia Arena', num: 17 },
+      { name: 'Fisht Stadium', id: 'fwc2018-Est. Fisht Stadium', num: 18 },
+      { name: 'Volgograd Arena', id: 'fwc2018-Est. Volgograd Arena', num: 19 }
+    ];
+    var fwc2018Cidades = [
+      { name: 'Moscow 1', id: 'fwc2018-Cid. Moscow 1', num: 20 },
+      { name: 'Moscow 2', id: 'fwc2018-Cid. Moscow 2', num: 21 },
+      { name: 'Kaliningrad', id: 'fwc2018-Cid. Kaliningrad', num: 22 },
+      { name: 'Saint Petersburg', id: 'fwc2018-Cid. Saint Petersburg', num: 23 },
+      { name: 'Sochi', id: 'fwc2018-Cid. Sochi', num: 24 },
+      { name: 'Rostov-on-Don', id: 'fwc2018-Cid. Rostov-on-Don', num: 25 },
+      { name: 'Volgograd', id: 'fwc2018-Cid. Volgograd', num: 26 },
+      { name: 'Kazan', id: 'fwc2018-Cid. Kazan', num: 27 },
+      { name: 'Nizhny Novgorod', id: 'fwc2018-Cid. Nizhny Novgorod', num: 28 },
+      { name: 'Samara', id: 'fwc2018-Cid. Samara', num: 29 },
+      { name: 'Yekaterinburg', id: 'fwc2018-Cid. Yekaterinburg', num: 30 },
+      { name: 'Saransk', id: 'fwc2018-Cid. Saransk', num: 31 }
+    ];
+    var fwc2018Legends = [
+      { name: 'Brasil 1958', id: 'fwc2018-Legends Brasil 1958', num: 672 },
+      { name: 'Alemanha 2014', id: 'fwc2018-Legends Alemanha 2014', num: 673 },
+      { name: 'Itália 1982', id: 'fwc2018-Legends Itália 1982', num: 674 },
+      { name: 'Uruguai 1930', id: 'fwc2018-Legends Uruguai 1930', num: 675 },
+      { name: 'Argentina 1986', id: 'fwc2018-Legends Argentina 1986', num: 676 },
+      { name: 'Inglaterra 1966', id: 'fwc2018-Legends Inglaterra 1966', num: 677 },
+      { name: 'França 1998', id: 'fwc2018-Legends França 1998', num: 678 },
+      { name: 'Espanha 2010', id: 'fwc2018-Legends Espanha 2010', num: 679 },
+      { name: 'Pelé', id: 'fwc2018-Legends Pelé', num: 680 },
+      { name: 'Miroslav Klose', id: 'fwc2018-Legends Miroslav Klose', num: 681 }
+    ];
+    function renderFwc2018Section(items, title, icon) {
+      const matchAny = !search || 'fwc'.includes(search) || 'world cup'.includes(search) || 'fifa'.includes(search) || title.toLowerCase().includes(search) || items.some(s => s.name.toLowerCase().includes(search));
+      const matchTabAny = currentTab === 'all' || items.some(s => { const st = getState(s.id); return (currentTab === 'owned' && st === 'owned') || (currentTab === 'missing' && (st === 'missing' || st === 'wanted')) || (currentTab === 'wanted' && st === 'wanted'); });
+      if (!matchAny || !matchTabAny) return '';
+      let h = '';
+      items.forEach(s => {
+        const st = getState(s.id);
+        const matchTab = currentTab === 'all' || (currentTab === 'owned' && st === 'owned') || (currentTab === 'missing' && (st === 'missing' || st === 'wanted')) || (currentTab === 'wanted' && st === 'wanted');
+        if (!matchTab) return;
+        const imgUrl = `https://www.laststicker.com/i/cards/3852/${s.num === 0 ? '00' : s.num}.jpg`;
+        h += `<div class="sticker fwc ${st}" data-id="${s.id}" onclick="openModal('${s.id}','${s.name}','fwc','FWC',${s.num})">
+          <img class="sticker-bg" loading="lazy" src="${imgUrl}" onerror="this.style.display='none'">
+          <div class="num">${String(s.num).padStart(2,'0')}</div>
+          <div class="name">${s.name}</div>
+        </div>`;
+      });
+      if (!h) return '';
+      return `<div style="font-size:0.8em;font-weight:800;color:var(--gold);padding:12px 0 4px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);margin-bottom:12px;">${icon} ${title}</div><div class="stickers">${h}</div>`;
+    }
+    html += renderFwc2018Section(fwc2018Mundial, 'Mundial', '🏆');
+    html += renderFwc2018Section(fwc2018Estadios, 'Estádios', '🏟️');
+    html += renderFwc2018Section(fwc2018Cidades, 'Cidades', '🗺️');
   }
 
   for (const gName of groups) {
@@ -2355,6 +2434,7 @@ function render() {
           </div>`;
         });
       } else {
+        const is2018 = currentAlbum === '2018';
         const ap = team.players;
         const n = ap.length;
         const sel = [];
@@ -2370,34 +2450,34 @@ function render() {
         for (let j=atStart;j<atStart+atN&&sel.length<18;j++) sel.push(j);
         while(sel.length<18&&sel.length<n) sel.push(sel.length);
         sel.sort((a,b)=>a-b);
+        const badgeSeq = is2018 ? get2018SeqNum(team.name, 1) : 1;
         if (matchTeam && matchTabBadge) {
           count++;
           const badgeUrl = getStickerImageUrl(team.name, 1);
-          playersHTML += `<div class="sticker badge ${stateBadge}" data-id="${idBadge}" onclick="openModal('${idBadge}','Emblema','EMB','${team.name.replace(/'/g,"\\'")}',1)">
-            <img class="sticker-bg" loading="lazy" src="${badgeUrl}" data-team="${team.name}" data-num="1" onerror="handleBadgeError(this)">
-            <div class="num">1</div>
+          playersHTML += `<div class="sticker badge ${stateBadge}" data-id="${idBadge}" onclick="openModal('${idBadge}','Emblema','EMB','${team.name.replace(/'/g,"\\'")}',${badgeSeq})">
+            <img class="sticker-bg" loading="lazy" src="${badgeUrl}" data-team="${team.name}" data-num="${badgeSeq}" onerror="handleBadgeError(this)">
+            <div class="num">${badgeSeq}</div>
             <div class="pos">EMB</div>
             <div class="name">${getFlagImg(team.name, 32)}</div>
           </div>`;
         }
-        let photoHTML = '';
         const matchTabPhotoCalc = currentTab === 'all' || (currentTab === 'owned' && statePhoto === 'owned') || (currentTab === 'missing' && (statePhoto === 'missing' || statePhoto === 'wanted')) || (currentTab === 'wanted' && statePhoto === 'wanted');
+        const photoSeq = is2018 ? get2018SeqNum(team.name, 13) : 13;
         if (matchTeam && matchTabPhotoCalc) {
+          count++;
           const photoUrl = getStickerImageUrl(team.name, 13);
-          photoHTML = `<div class="sticker photo ${statePhoto}" data-id="${idPhoto}" onclick="openModal('${idPhoto}','Foto de Equipa','photo','${team.name.replace(/'/g,"\\'")}',13)">
-            <img class="sticker-bg" loading="lazy" src="${photoUrl}" data-team="${team.name}" data-num="13" onerror="handlePhotoError(this)">
-            <div class="num">13</div>
+          playersHTML += `<div class="sticker photo ${statePhoto}" data-id="${idPhoto}" onclick="openModal('${idPhoto}','Foto de Equipa','photo','${team.name.replace(/'/g,"\\'")}',${photoSeq})">
+            <img class="sticker-bg" loading="lazy" src="${photoUrl}" data-team="${team.name}" data-num="${photoSeq}" onerror="handlePhotoError(this)">
+            <div class="num">${photoSeq}</div>
             <div class="pos">EQP</div>
             <div class="name">${getFlagImg(team.name, 32)}</div>
           </div>`;
         }
+        const teamIdx2018 = is2018 ? teamOrder2018.indexOf(team.name) : -1;
         sel.forEach((origI, dispI) => {
           const p = ap[origI];
-          if (dispI === 11 && photoHTML) {
-            playersHTML += photoHTML;
-            count++;
-          }
-          const stickerNum = dispI < 11 ? dispI + 2 : dispI + 3;
+          const localNum = dispI < 11 ? dispI + 2 : dispI + 3;
+          const stickerNum = is2018 ? 34 + teamIdx2018 * 20 + dispI : localNum;
           const pos = origI < Math.ceil(n*0.12) ? 'GR' : origI < Math.floor(n*0.42) ? 'ZAG' : origI < Math.floor(n*0.72) ? 'MD' : 'AT';
           const id = `${gName}-${team.name}-${origI}`;
           const state = getState(id);
@@ -2406,7 +2486,7 @@ function render() {
           const visible = matchSearch && matchTab;
           if (!visible) return;
           count++;
-          const playerUrl = getStickerImageUrl(team.name, stickerNum);
+          const playerUrl = is2018 ? `https://www.laststicker.com/i/cards/3852/${34 + teamIdx2018 * 20 + dispI}.jpg` : getStickerImageUrl(team.name, localNum);
           const initials = p.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
           playersHTML += `<div class="sticker ${state}" data-id="${id}" onclick="openModal('${id}','${p.replace(/'/g,"\\'")}','${pos}','${team.name.replace(/'/g,"\\'")}',${stickerNum})">
             <img class="sticker-bg" loading="lazy" src="${playerUrl}" data-team="${team.name}" data-player="${p}" data-num="${stickerNum}" data-pn="${p}" onerror="handleStickerError(this)">
@@ -2437,6 +2517,41 @@ function render() {
     }
   }
 
+  if (currentAlbum === '2018' && (currentGroup === 'all' || currentGroup === 'FWC')) {
+    var fwc2018Legends = [
+      { name: 'Brasil 1958', id: 'fwc2018-Legends Brasil 1958', num: 672 },
+      { name: 'Alemanha 2014', id: 'fwc2018-Legends Alemanha 2014', num: 673 },
+      { name: 'Itália 1982', id: 'fwc2018-Legends Itália 1982', num: 674 },
+      { name: 'Uruguai 1930', id: 'fwc2018-Legends Uruguai 1930', num: 675 },
+      { name: 'Argentina 1986', id: 'fwc2018-Legends Argentina 1986', num: 676 },
+      { name: 'Inglaterra 1966', id: 'fwc2018-Legends Inglaterra 1966', num: 677 },
+      { name: 'França 1998', id: 'fwc2018-Legends França 1998', num: 678 },
+      { name: 'Espanha 2010', id: 'fwc2018-Legends Espanha 2010', num: 679 },
+      { name: 'Pelé', id: 'fwc2018-Legends Pelé', num: 680 },
+      { name: 'Miroslav Klose', id: 'fwc2018-Legends Miroslav Klose', num: 681 }
+    ];
+    const matchLegends = !search || 'legends'.includes(search) || 'lenda'.includes(search) || 'pelé'.includes(search) || 'pele'.includes(search) || 'klose'.includes(search);
+    const matchTabLegends = currentTab === 'all' || fwc2018Legends.some(s => { const st = getState(s.id); return (currentTab === 'owned' && st === 'owned') || (currentTab === 'missing' && (st === 'missing' || st === 'wanted')) || (currentTab === 'wanted' && st === 'wanted'); });
+    if (matchLegends && matchTabLegends) {
+      let legendsHTML = '';
+      fwc2018Legends.forEach(s => {
+        const st = getState(s.id);
+        const matchTab = currentTab === 'all' || (currentTab === 'owned' && st === 'owned') || (currentTab === 'missing' && (st === 'missing' || st === 'wanted')) || (currentTab === 'wanted' && st === 'wanted');
+        if (!matchTab) return;
+        const imgUrl = `https://www.laststicker.com/i/cards/3852/${s.num}.jpg`;
+        legendsHTML += `<div class="sticker fwc ${st}" data-id="${s.id}" onclick="openModal('${s.id}','${s.name}','fwc','FWC',${s.num})">
+          <img class="sticker-bg" loading="lazy" src="${imgUrl}" onerror="this.style.display='none'">
+          <div class="num">${s.num}</div>
+          <div class="name">${s.name}</div>
+        </div>`;
+      });
+      if (legendsHTML) {
+        html += `<div style="font-size:0.8em;font-weight:800;color:var(--gold);padding:12px 0 4px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);margin-bottom:12px;">⭐ Legends (672-681)</div>`;
+        html += `<div class="stickers">${legendsHTML}</div>`;
+      }
+    }
+  }
+
   if (currentAlbum === '2022' && (currentGroup === 'all' || currentGroup === 'FWC')) {
     var fwc2022Museu = [
       { name: 'Uruguai 1930', id: 'fwc2022-Museu FIFA 1930', icon: '🏛️' },
@@ -2460,7 +2575,9 @@ function render() {
         const matchTab = currentTab === 'all' || (currentTab === 'owned' && st === 'owned') || (currentTab === 'missing' && (st === 'missing' || st === 'wanted')) || (currentTab === 'wanted' && st === 'wanted');
         if (!matchTab) return;
         const displayNum = String(i + 19).padStart(2, '0');
+        const museuImgUrl = `https://www.laststicker.com/i/cards/7915/fwc${i + 19}.jpg`;
         museuHTML += `<div class="sticker fwc ${st}" data-id="${s.id}" onclick="openModal('${s.id}','${s.name}','fwc','FWC',${i + 19})">
+          <img class="sticker-bg" loading="lazy" src="${museuImgUrl}" onerror="this.style.display='none'">
           <div class="num">${displayNum}</div>
           <div class="name">${s.name}</div>
         </div>`;
@@ -2471,62 +2588,6 @@ function render() {
       }
     }
   }
-  if (currentAlbum === '2018' && (currentGroup === 'all' || currentGroup === 'FWC')) {
-    var fwc2018Museu = [
-      { name: 'Panini', id: 'fwc2018-Panini', icon: '🏷️' },
-      { name: 'FIFA Fair Play', id: 'fwc2018-FIFA Fair Play', icon: '🏛️' },
-      { name: 'Troféu FIFA', id: 'fwc2018-Troféu FIFA', icon: '🏆' },
-      { name: 'Style Guide 1', id: 'fwc2018-Style Guide 1', icon: '🎨' },
-      { name: 'Style Guide 2', id: 'fwc2018-Style Guide 2', icon: '🎨' },
-      { name: 'Logótipo FIFA 1', id: 'fwc2018-Logótipo FIFA 1', icon: '🏅' },
-      { name: 'Logótipo FIFA 2', id: 'fwc2018-Logótipo FIFA 2', icon: '🏅' },
-      { name: 'Bola Telstar 18', id: 'fwc2018-Bola Oficial', icon: '⚽' },
-      { name: 'Ekaterinburg Arena', id: 'fwc2018-Est. Ekaterinburg', icon: '🏟️' },
-      { name: 'Kaliningrad Stadium', id: 'fwc2018-Est. Kaliningrad', icon: '🏟️' },
-      { name: 'Kazan Arena', id: 'fwc2018-Est. Kazan', icon: '🏟️' },
-      { name: 'Spartak Stadium', id: 'fwc2018-Est. Spartak', icon: '🏟️' },
-      { name: 'Nizhny Novgorod Stadium', id: 'fwc2018-Est. Nizhny Novgorod', icon: '🏟️' },
-      { name: 'Luzhniki Stadium', id: 'fwc2018-Est. Luzhniki', icon: '🏟️' },
-      { name: 'Rostov Arena', id: 'fwc2018-Est. Rostov', icon: '🏟️' },
-      { name: 'Saint Petersburg Stadium', id: 'fwc2018-Est. São Petersburgo', icon: '🏟️' },
-      { name: 'Samara Arena', id: 'fwc2018-Est. Samara', icon: '🏟️' },
-      { name: 'Mordovia Arena', id: 'fwc2018-Est. Mordovia', icon: '🏟️' },
-      { name: 'Fisht Stadium', id: 'fwc2018-Est. Fisht', icon: '🏟️' },
-      { name: 'Volgograd Arena', id: 'fwc2018-Est. Volgograd', icon: '🏟️' },
-      { name: 'Moscou 1', id: 'fwc2018-Moscou 1', icon: '🏙️' },
-      { name: 'Moscou 2', id: 'fwc2018-Moscou 2', icon: '🏙️' },
-      { name: 'Kaliningrad', id: 'fwc2018-Kaliningrad', icon: '🏙️' },
-      { name: 'São Petersburgo', id: 'fwc2018-São Petersburgo', icon: '🏙️' },
-      { name: 'Sochi', id: 'fwc2018-Sochi', icon: '🏙️' },
-      { name: 'Rostov-on-Don', id: 'fwc2018-Rostov-on-Don', icon: '🏙️' },
-      { name: 'Volgograd', id: 'fwc2018-Volgograd', icon: '🏙️' },
-      { name: 'Kazan', id: 'fwc2018-Kazan', icon: '🏙️' },
-      { name: 'Nizhny Novgorod', id: 'fwc2018-Nizhny Novgorod', icon: '🏙️' },
-      { name: 'Samara', id: 'fwc2018-Samara', icon: '🏙️' },
-      { name: 'Ekaterinburg', id: 'fwc2018-Ekaterinburg', icon: '🏙️' },
-      { name: 'Saransk', id: 'fwc2018-Saransk', icon: '🏙️' }
-    ];
-    const matchMuseu = !search || 'fwc'.includes(search) || 'museu'.includes(search) || 'stadium'.includes(search) || 'estádio'.includes(search) || 'estadio'.includes(search) || 'bola'.includes(search) || 'troféu'.includes(search) || 'trofeu'.includes(search) || 'panini'.includes(search) || 'logo'.includes(search) || 'logotipo'.includes(search) || 'host'.includes(search) || 'city'.includes(search) || 'cidade'.includes(search) || 'fair'.includes(search) || 'play'.includes(search) || 'style'.includes(search) || 'guide'.includes(search);
-    const matchTabMuseu = currentTab === 'all' || fwc2018Museu.some(s => { const st = getState(s.id); return (currentTab === 'owned' && st === 'owned') || (currentTab === 'missing' && (st === 'missing' || st === 'wanted')) || (currentTab === 'wanted' && st === 'wanted'); });
-    if (matchMuseu && matchTabMuseu) {
-      let museuHTML = '';
-      fwc2018Museu.forEach((s, i) => {
-        const st = getState(s.id);
-        const matchTab = currentTab === 'all' || (currentTab === 'owned' && st === 'owned') || (currentTab === 'missing' && (st === 'missing' || st === 'wanted')) || (currentTab === 'wanted' && st === 'wanted');
-        if (!matchTab) return;
-        const displayNum = String(i).padStart(2, '0');
-        museuHTML += `<div class="sticker fwc ${st}" data-id="${s.id}" onclick="openModal('${s.id}','${s.name}','fwc','FWC',${i})">
-          <div class="num">${displayNum}</div>
-          <div class="name">${s.name}</div>
-        </div>`;
-      });
-      if (museuHTML) {
-        html += `<div style="font-size:0.8em;font-weight:800;color:var(--gold);padding:12px 0 4px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);margin-bottom:12px;">⭐ FWC (00-31)</div>`;
-        html += `<div class="stickers">${museuHTML}</div>`;
-      }
-    }
-  }
-
   if (currentAlbum === '2026' && (currentGroup === 'all' || currentGroup === 'FWC')) {
     const matchFWC = !search || 'fwc'.includes(search) || 'world cup'.includes(search) || 'fifa'.includes(search) || 'museu'.includes(search) || 'museum'.includes(search);
     const fwcBottom = fwcStickers.filter(s => s.num >= 9);
@@ -2668,50 +2729,37 @@ function getActiveTeamOrder() { return currentAlbum === '2026' ? teamOrder : cur
 
 function getStickerImageUrl(teamName, stickerPos) {
   if (currentAlbum === '2022') {
-    const idx = teamOrder2022.indexOf(teamName);
-    if (idx === -1) return '';
-    const baseNum = 32 + (idx * 20);
-    let lsNum;
-    if (stickerPos === 1) lsNum = baseNum + 1;
-    else if (stickerPos === 2) lsNum = baseNum;
-    else lsNum = baseNum + stickerPos - 1;
-    return `https://www.laststicker.com/i/cards/panini_fifa_world_cup_2022/${lsNum}.jpg`;
+    const code = lsTeamCode[teamName];
+    if (!code) return '';
+    return `https://www.laststicker.com/i/cards/7915/${code}${stickerPos}.jpg`;
   }
   if (currentAlbum === '2018') {
-    const idx = teamOrder2018.indexOf(teamName);
-    if (idx === -1) return '';
-    const baseNum = 32 + (idx * 20);
-    let lsNum;
-    if (stickerPos === 1) lsNum = baseNum + 1;
-    else if (stickerPos === 2) lsNum = baseNum;
-    else lsNum = baseNum + stickerPos - 1;
-    return `https://www.laststicker.com/i/cards/panini_fifa_world_cup_2018/${lsNum}.jpg`;
+    const seq = get2018SeqNum(teamName, stickerPos);
+    if (!seq) return '';
+    return `https://www.laststicker.com/i/cards/3852/${seq}.jpg`;
   }
   const idx = teamOrder.indexOf(teamName);
   if (idx === -1) return '';
   const imgNum = (idx * 20) + stickerPos + 20;
   return `https://firebasestorage.googleapis.com/v0/b/centralcopa-prod.firebasestorage.app/o/public%2Fstickers%2FWC2026_BR%2F${imgNum}.jpg?alt=media`;
 }
+function get2018SeqNum(teamName, stickerPos) {
+  const idx = teamOrder2018.indexOf(teamName);
+  if (idx === -1) return 0;
+  if (stickerPos === 1) return 32 + idx * 20;
+  if (stickerPos === 13) return 33 + idx * 20;
+  return 34 + idx * 20 + (stickerPos - 3);
+}
 function getStickerImageUrlPng(teamName, stickerPos) {
   if (currentAlbum === '2022') {
-    const idx = teamOrder2022.indexOf(teamName);
-    if (idx === -1) return '';
-    const baseNum = 32 + (idx * 20);
-    let lsNum;
-    if (stickerPos === 1) lsNum = baseNum + 1;
-    else if (stickerPos === 2) lsNum = baseNum;
-    else lsNum = baseNum + stickerPos - 1;
-    return `https://www.laststicker.com/i/cards/panini_fifa_world_cup_2022/${lsNum}.png`;
+    const code = lsTeamCode[teamName];
+    if (!code) return '';
+    return `https://www.laststicker.com/i/cards/7915/${code}${stickerPos}.jpg`;
   }
   if (currentAlbum === '2018') {
-    const idx = teamOrder2018.indexOf(teamName);
-    if (idx === -1) return '';
-    const baseNum = 32 + (idx * 20);
-    let lsNum;
-    if (stickerPos === 1) lsNum = baseNum + 1;
-    else if (stickerPos === 2) lsNum = baseNum;
-    else lsNum = baseNum + stickerPos - 1;
-    return `https://www.laststicker.com/i/cards/panini_fifa_world_cup_2018/${lsNum}.png`;
+    const seq = get2018SeqNum(teamName, stickerPos);
+    if (!seq) return '';
+    return `https://www.laststicker.com/i/cards/3852/${seq}.jpg`;
   }
   const idx = teamOrder.indexOf(teamName);
   if (idx === -1) return '';
@@ -2721,7 +2769,7 @@ function getStickerImageUrlPng(teamName, stickerPos) {
 
 function openModal(id, name, pos, team, num) {
   currentModal = { id, name, pos, team, num };
-  document.getElementById('modalNum').textContent = (pos === 'fwc' || pos === 'FWC') ? String(num).padStart(2, '0') : num;
+  document.getElementById('modalNum').textContent = (pos === 'fwc' || pos === 'FWC') ? (currentAlbum === '2018' ? String(num).padStart(2, '0') : String(num).padStart(2, '0')) : num;
   document.getElementById('modalName').textContent = name;
   document.getElementById('modalPos').textContent = `${pos} · ${team}`;
   const bigImg = document.getElementById('modalStickerImg');
@@ -2730,20 +2778,29 @@ function openModal(id, name, pos, team, num) {
   bigImg.classList.toggle('fwc-modal', pos === 'fwc');
   let imgUrl = '';
   if (pos === 'fwc' || pos === 'FWC') {
-    const fireNum = num + 1;
-    imgUrl = `https://firebasestorage.googleapis.com/v0/b/centralcopa-prod.firebasestorage.app/o/public%2Fstickers%2FWC2026_BR%2F${fireNum}.jpg?alt=media`;
+    if (currentAlbum === '2022') {
+      const fwcCode = num === 0 ? '00' : `fwc${num}`;
+      imgUrl = `https://www.laststicker.com/i/cards/7915/${fwcCode}.jpg`;
+    } else if (currentAlbum === '2018') {
+      imgUrl = `https://www.laststicker.com/i/cards/3852/${num === 0 ? '00' : num}.jpg`;
+    } else {
+      const fireNum = num + 1;
+      imgUrl = `https://firebasestorage.googleapis.com/v0/b/centralcopa-prod.firebasestorage.app/o/public%2Fstickers%2FWC2026_BR%2F${fireNum}.jpg?alt=media`;
+    }
   } else if (pos === 'Coca-Cola') {
     const cs = cocaStickers.find(x => x.num === num);
     if (cs) {
       imgUrl = cs.url2022 || (cs.pos ? `https://firebasestorage.googleapis.com/v0/b/centralcopa-prod.firebasestorage.app/o/public%2Fstickers%2FWC2026_BR%2F${cs.pos}.jpg?alt=media` : '');
     }
+  } else if (currentAlbum === '2018') {
+    imgUrl = `https://www.laststicker.com/i/cards/3852/${num}.jpg`;
   } else {
     imgUrl = getStickerImageUrl(team, num);
   }
   if (imgUrl) {
     bigImgTag.src = imgUrl;
     bigImg.style.display = 'flex';
-    const pngUrl = (pos === 'fwc' || pos === 'FWC') ? imgUrl.replace('.jpg', '.png') : (pos === 'Coca-Cola' ? imgUrl.replace('.jpg', '.png') : getStickerImageUrlPng(team, num));
+    const pngUrl = (pos === 'fwc' || pos === 'FWC') ? imgUrl.replace('.jpg', '.png') : (pos === 'Coca-Cola' ? imgUrl.replace('.jpg', '.png') : (currentAlbum === '2018' ? imgUrl : getStickerImageUrlPng(team, num)));
     bigImgTag.onerror = function() {
       if (pngUrl && bigImgTag.src !== pngUrl) {
         bigImgTag.src = pngUrl;
@@ -2841,16 +2898,25 @@ function getMissingByTeam() {
     });
   }
   if (currentAlbum === '2022') {
-    const fwc2022Ids = ['fwc2022-Panini','fwc2022-FIFA','fwc2022-Troféu 1','fwc2022-Troféu 2','fwc2022-Mascote 1','fwc2022-Mascote 2','fwc2022-Emblema 1','fwc2022-Emblema 2','fwc2022-Est. Ahmad Bin Ali','fwc2022-Est. Al Janoub','fwc2022-Est. Al Thumama','fwc2022-Est. Education City','fwc2022-Est. Khalifa','fwc2022-Est. 974','fwc2022-Est. Al Bayt ext.','fwc2022-Est. Al Bayt int.','fwc2022-Est. Lusail ext.','fwc2022-Est. Lusail int.','fwc2022-Al Rihla','fwc2022-Museu FIFA 1930','fwc2022-Museu FIFA 1938','fwc2022-Museu FIFA 1958','fwc2022-Museu FIFA 1966','fwc2022-Museu FIFA 1970','fwc2022-Museu FIFA 1978','fwc2022-Museu FIFA 1982','fwc2022-Museu FIFA 1990','fwc2022-Museu FIFA 1998','fwc2022-Museu FIFA 2010','fwc2022-Museu FIFA 2018'];
+    const fwc2022Top = ['fwc2022-Panini','fwc2022-FIFA','fwc2022-Troféu 1','fwc2022-Troféu 2','fwc2022-Mascote 1','fwc2022-Mascote 2','fwc2022-Emblema 1','fwc2022-Emblema 2','fwc2022-Est. Ahmad Bin Ali','fwc2022-Est. Al Janoub','fwc2022-Est. Al Thumama','fwc2022-Est. Education City','fwc2022-Est. Khalifa','fwc2022-Est. 974','fwc2022-Est. Al Bayt ext.','fwc2022-Est. Al Bayt int.','fwc2022-Est. Lusail ext.','fwc2022-Est. Lusail int.','fwc2022-Al Rihla'];
+    const fwc2022Museu = ['fwc2022-Museu FIFA 1930','fwc2022-Museu FIFA 1938','fwc2022-Museu FIFA 1958','fwc2022-Museu FIFA 1966','fwc2022-Museu FIFA 1970','fwc2022-Museu FIFA 1978','fwc2022-Museu FIFA 1982','fwc2022-Museu FIFA 1990','fwc2022-Museu FIFA 1998','fwc2022-Museu FIFA 2010','fwc2022-Museu FIFA 2018'];
     const fwcMissing = [];
-    fwc2022Ids.forEach((id, i) => { if (getState(id) === 'missing') fwcMissing.push(String(i).padStart(2, '0')); });
-    if (fwcMissing.length) map['FWC'] = fwcMissing;
+    fwc2022Top.forEach((id, i) => { if (getState(id) === 'missing') fwcMissing.push(String(i).padStart(2, '0')); });
+    if (fwcMissing.length) nums1.push(...fwcMissing);
+    const fwcMuseuMissing = [];
+    fwc2022Museu.forEach((id, i) => { if (getState(id) === 'missing') fwcMuseuMissing.push(String(i + 19).padStart(2, '0')); });
+    if (fwcMuseuMissing.length) nums2.push(...fwcMuseuMissing);
   }
   if (currentAlbum === '2018') {
-    const fwc2018Ids = ['fwc2018-Panini','fwc2018-FIFA Fair Play','fwc2018-Troféu FIFA','fwc2018-Style Guide 1','fwc2018-Style Guide 2','fwc2018-Logótipo FIFA 1','fwc2018-Logótipo FIFA 2','fwc2018-Bola Oficial','fwc2018-Est. Ekaterinburg','fwc2018-Est. Kaliningrad','fwc2018-Est. Kazan','fwc2018-Est. Spartak','fwc2018-Est. Nizhny Novgorod','fwc2018-Est. Luzhniki','fwc2018-Est. Rostov','fwc2018-Est. São Petersburgo','fwc2018-Est. Samara','fwc2018-Est. Mordovia','fwc2018-Est. Fisht','fwc2018-Est. Volgograd','fwc2018-Moscou 1','fwc2018-Moscou 2','fwc2018-Kaliningrad','fwc2018-São Petersburgo','fwc2018-Sochi','fwc2018-Rostov-on-Don','fwc2018-Volgograd','fwc2018-Kazan','fwc2018-Nizhny Novgorod','fwc2018-Samara','fwc2018-Ekaterinburg','fwc2018-Saransk'];
-    const fwcMissing = [];
-    fwc2018Ids.forEach((id, i) => { if (getState(id) === 'missing') fwcMissing.push(String(i).padStart(2, '0')); });
-    if (fwcMissing.length) map['FWC'] = fwcMissing;
+    const fwcMundial = ['fwc2018-Mundial Panini','fwc2018-Mundial FIFA Fair Play','fwc2018-Mundial Troféu','fwc2018-Mundial Gráfico 1','fwc2018-Mundial Gráfico 2','fwc2018-Mundial Logo 1','fwc2018-Mundial Logo 2','fwc2018-Mundial Bola Oficial'];
+    const fwcEstadios = ['fwc2018-Est. Ekaterinburg Arena','fwc2018-Est. Kaliningrad Stadium','fwc2018-Est. Kazan Arena','fwc2018-Est. Spartak Stadium','fwc2018-Est. Nizhny Novgorod','fwc2018-Est. Luzhniki','fwc2018-Est. Rostov Arena','fwc2018-Est. Saint Petersburg','fwc2018-Est. Samara Arena','fwc2018-Est. Mordovia Arena','fwc2018-Est. Fisht Stadium','fwc2018-Est. Volgograd Arena'];
+    const fwcCidades = ['fwc2018-Cid. Moscow 1','fwc2018-Cid. Moscow 2','fwc2018-Cid. Kaliningrad','fwc2018-Cid. Saint Petersburg','fwc2018-Cid. Sochi','fwc2018-Cid. Rostov-on-Don','fwc2018-Cid. Volgograd','fwc2018-Cid. Kazan','fwc2018-Cid. Nizhny Novgorod','fwc2018-Cid. Samara','fwc2018-Cid. Yekaterinburg','fwc2018-Cid. Saransk'];
+    const mM = []; fwcMundial.forEach((id, i) => { if (getState(id) === 'missing') mM.push(String(i).padStart(2, '0')); });
+    const mE = []; fwcEstadios.forEach((id, i) => { if (getState(id) === 'missing') mE.push(String(i + 8).padStart(2, '0')); });
+    const mC = []; fwcCidades.forEach((id, i) => { if (getState(id) === 'missing') mC.push(String(i + 20).padStart(2, '0')); });
+    if (mM.length) map['Mundial'] = mM;
+    if (mE.length) map['Estádios'] = mE;
+    if (mC.length) map['Cidades'] = mC;
   }
   if (nums1.length) map['FWC 00-08'] = nums1;
   const shareTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : teams2018);
@@ -2859,7 +2925,7 @@ function getMissingByTeam() {
   for (const [gName, gData] of Object.entries(shareTeams)) {
     for (const team of gData.teams) {
       const nums = [];
-      if (is2022 || is2018) {
+      if (is2022) {
         const photo = `${gName}-${team.name}-photo`;
         if (getState(photo) === 'missing') nums.push(1);
         const badge = `${gName}-${team.name}-badge`;
@@ -2867,6 +2933,15 @@ function getMissingByTeam() {
         team.players.forEach((p, i) => {
           const id = `${gName}-${team.name}-${i}`;
           if (getState(id) === 'missing') nums.push(i + 3);
+        });
+      } else if (is2018) {
+        const badge = `${gName}-${team.name}-badge`;
+        if (getState(badge) === 'missing') nums.push(get2018SeqNum(team.name, 1));
+        const photo = `${gName}-${team.name}-photo`;
+        if (getState(photo) === 'missing') nums.push(get2018SeqNum(team.name, 13));
+        team.players.forEach((p, i) => {
+          const id = `${gName}-${team.name}-${i}`;
+          if (getState(id) === 'missing') nums.push(get2018SeqNum(team.name, i + 3));
         });
       } else {
         const badge = `${gName}-${team.name}-badge`;
@@ -2882,6 +2957,23 @@ function getMissingByTeam() {
     }
   }
   if (nums2.length) map['FWC 09-19'] = nums2;
+  if (currentAlbum === '2018') {
+    const legendIds = [
+      { id: 'fwc2018-Legends Brasil 1958', num: 672 },
+      { id: 'fwc2018-Legends Alemanha 2014', num: 673 },
+      { id: 'fwc2018-Legends Itália 1982', num: 674 },
+      { id: 'fwc2018-Legends Uruguai 1930', num: 675 },
+      { id: 'fwc2018-Legends Argentina 1986', num: 676 },
+      { id: 'fwc2018-Legends Inglaterra 1966', num: 677 },
+      { id: 'fwc2018-Legends França 1998', num: 678 },
+      { id: 'fwc2018-Legends Espanha 2010', num: 679 },
+      { id: 'fwc2018-Legends Pelé', num: 680 },
+      { id: 'fwc2018-Legends Miroslav Klose', num: 681 }
+    ];
+    const legendMissing = [];
+    legendIds.forEach(s => { if (getState(s.id) === 'missing') legendMissing.push(s.num); });
+    if (legendMissing.length) map['Legends'] = legendMissing;
+  }
   if (currentAlbum === '2026' && showCoca) {
     const nums = [];
     cocaStickers.forEach(s => { if (getState(`coca-${s.num}`) === 'missing') nums.push(s.num); });
@@ -2898,7 +2990,7 @@ function getWantedByTeam() {
   for (const [gName, gData] of Object.entries(shareTeams)) {
     for (const team of gData.teams) {
       const nums = [];
-      if (is2022 || is2018) {
+      if (is2022) {
         const photo = `${gName}-${team.name}-photo`;
         if (getState(photo) === 'wanted') nums.push(1);
         const badge = `${gName}-${team.name}-badge`;
@@ -2906,6 +2998,15 @@ function getWantedByTeam() {
         team.players.forEach((p, i) => {
           const id = `${gName}-${team.name}-${i}`;
           if (getState(id) === 'wanted') nums.push(i + 3);
+        });
+      } else if (is2018) {
+        const badge = `${gName}-${team.name}-badge`;
+        if (getState(badge) === 'wanted') nums.push(get2018SeqNum(team.name, 1));
+        const photo = `${gName}-${team.name}-photo`;
+        if (getState(photo) === 'wanted') nums.push(get2018SeqNum(team.name, 13));
+        team.players.forEach((p, i) => {
+          const id = `${gName}-${team.name}-${i}`;
+          if (getState(id) === 'wanted') nums.push(get2018SeqNum(team.name, i + 3));
         });
       } else {
         const badge = `${gName}-${team.name}-badge`;
@@ -2942,10 +3043,30 @@ function getWantedByTeam() {
     if (fwcWanted.length) map['FWC'] = fwcWanted;
   }
   if (currentAlbum === '2018') {
-    const fwcIds = ['fwc2018-Panini','fwc2018-FIFA Fair Play','fwc2018-Troféu FIFA','fwc2018-Style Guide 1','fwc2018-Style Guide 2','fwc2018-Logótipo FIFA 1','fwc2018-Logótipo FIFA 2','fwc2018-Bola Oficial','fwc2018-Est. Ekaterinburg','fwc2018-Est. Kaliningrad','fwc2018-Est. Kazan','fwc2018-Est. Spartak','fwc2018-Est. Nizhny Novgorod','fwc2018-Est. Luzhniki','fwc2018-Est. Rostov','fwc2018-Est. São Petersburgo','fwc2018-Est. Samara','fwc2018-Est. Mordovia','fwc2018-Est. Fisht','fwc2018-Est. Volgograd','fwc2018-Moscou 1','fwc2018-Moscou 2','fwc2018-Kaliningrad','fwc2018-São Petersburgo','fwc2018-Sochi','fwc2018-Rostov-on-Don','fwc2018-Volgograd','fwc2018-Kazan','fwc2018-Nizhny Novgorod','fwc2018-Samara','fwc2018-Ekaterinburg','fwc2018-Saransk'];
-    const fwcWanted = [];
-    fwcIds.forEach((id, i) => { if (getState(id) === 'wanted') fwcWanted.push(String(i).padStart(2, '0')); });
-    if (fwcWanted.length) map['FWC'] = fwcWanted;
+    const fwcMundial = ['fwc2018-Mundial Panini','fwc2018-Mundial FIFA Fair Play','fwc2018-Mundial Troféu','fwc2018-Mundial Gráfico 1','fwc2018-Mundial Gráfico 2','fwc2018-Mundial Logo 1','fwc2018-Mundial Logo 2','fwc2018-Mundial Bola Oficial'];
+    const fwcEstadios = ['fwc2018-Est. Ekaterinburg Arena','fwc2018-Est. Kaliningrad Stadium','fwc2018-Est. Kazan Arena','fwc2018-Est. Spartak Stadium','fwc2018-Est. Nizhny Novgorod','fwc2018-Est. Luzhniki','fwc2018-Est. Rostov Arena','fwc2018-Est. Saint Petersburg','fwc2018-Est. Samara Arena','fwc2018-Est. Mordovia Arena','fwc2018-Est. Fisht Stadium','fwc2018-Est. Volgograd Arena'];
+    const fwcCidades = ['fwc2018-Cid. Moscow 1','fwc2018-Cid. Moscow 2','fwc2018-Cid. Kaliningrad','fwc2018-Cid. Saint Petersburg','fwc2018-Cid. Sochi','fwc2018-Cid. Rostov-on-Don','fwc2018-Cid. Volgograd','fwc2018-Cid. Kazan','fwc2018-Cid. Nizhny Novgorod','fwc2018-Cid. Samara','fwc2018-Cid. Yekaterinburg','fwc2018-Cid. Saransk'];
+    const wM = []; fwcMundial.forEach((id, i) => { if (getState(id) === 'wanted') wM.push(String(i).padStart(2, '0')); });
+    const wE = []; fwcEstadios.forEach((id, i) => { if (getState(id) === 'wanted') wE.push(String(i + 8).padStart(2, '0')); });
+    const wC = []; fwcCidades.forEach((id, i) => { if (getState(id) === 'wanted') wC.push(String(i + 20).padStart(2, '0')); });
+    if (wM.length) map['Mundial'] = wM;
+    if (wE.length) map['Estádios'] = wE;
+    if (wC.length) map['Cidades'] = wC;
+    const legendIds = [
+      { id: 'fwc2018-Legends Brasil 1958', num: 672 },
+      { id: 'fwc2018-Legends Alemanha 2014', num: 673 },
+      { id: 'fwc2018-Legends Itália 1982', num: 674 },
+      { id: 'fwc2018-Legends Uruguai 1930', num: 675 },
+      { id: 'fwc2018-Legends Argentina 1986', num: 676 },
+      { id: 'fwc2018-Legends Inglaterra 1966', num: 677 },
+      { id: 'fwc2018-Legends França 1998', num: 678 },
+      { id: 'fwc2018-Legends Espanha 2010', num: 679 },
+      { id: 'fwc2018-Legends Pelé', num: 680 },
+      { id: 'fwc2018-Legends Miroslav Klose', num: 681 }
+    ];
+    const legendWanted = [];
+    legendIds.forEach(s => { if (getState(s.id) === 'wanted') legendWanted.push(s.num); });
+    if (legendWanted.length) map['Legends'] = legendWanted;
   }
   return map;
 }
@@ -3064,10 +3185,12 @@ async function loadAdminPanel() {
     const userMap = {};
     userSnap.docs.forEach(d => { userMap[d.id] = d.data(); });
     const users = [];
+    const statesField = currentAlbum === '2022' ? 'playerStates2022' : (currentAlbum === '2018' ? 'playerStates2018' : 'playerStates');
+    const albumLabel = currentAlbum === '2026' ? '2026' : (currentAlbum === '2022' ? '2022' : '2018');
     accSnap.docs.forEach(d => {
       const acc = d.data();
       const ud = userMap[d.id] || {};
-      const states = ud.playerStates || {};
+      const states = ud[statesField] || {};
       const owned = Object.values(states).filter(v => v === 'owned').length;
       const wanted = Object.values(states).filter(v => v === 'wanted').length;
       const total = Object.keys(states).length;
@@ -3091,7 +3214,7 @@ async function loadAdminPanel() {
     let h = `<div style="display:flex;justify-content:center;margin-bottom:16px;">
       <div style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:10px 24px;text-align:center;">
         <div style="font-size:1.4em;font-weight:800;color:var(--gold);">${users.length}</div>
-        <div style="font-size:0.75em;color:var(--muted);">Contas</div>
+        <div style="font-size:0.75em;color:var(--muted);">Contas — Álbum ${albumLabel}</div>
       </div>
     </div>`;
     h += '<div style="display:flex;flex-direction:column;gap:8px;">';

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Equipas para Firestore</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPWDIHK5yeEEW75lY_Y15Ir23hXagKhy4",
+      authDomain: "fifarinhas-26.firebaseapp.com",
+      projectId: "fifarinhas-26",
+      storageBucket: "fifarinhas-26.firebasestorage.app",
+      messagingSenderId: "1053411125609",
+      appId: "1:1053411125609:web:baefa77d83d8bb89ad35f8"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+  <script src="wc2018.js"></script>
+  <script src="wc2022.js"></script>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: 40px auto; padding: 20px; background: #1a1a2e; color: #fff; }
+    button { padding: 12px 24px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; margin: 8px; }
+    .upload-btn { background: #4CAF50; color: white; }
+    .upload-btn:hover { background: #45a049; }
+    #log { margin-top: 20px; padding: 16px; background: #16213e; border-radius: 8px; white-space: pre-wrap; font-size: 14px; }
+    h1 { color: #e94560; }
+  </style>
+</head>
+<body>
+  <h1>Upload Equipas para Firestore</h1>
+  <p>Faz upload dos dados das equipas de 2018 e 2022 para Firestore.</p>
+  <button class="upload-btn" onclick="uploadAll()">📤 Upload 2018 + 2022</button>
+  <button class="upload-btn" onclick="uploadOne('2018')">📤 Só 2018</button>
+  <button class="upload-btn" onclick="uploadOne('2022')">📤 Só 2022</button>
+  <div id="log">Pronto.</div>
+
+  <script>
+    function log(msg) {
+      const el = document.getElementById('log');
+      el.textContent += '\n' + msg;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function buildTeamsGrouped(rawData) {
+      const grouped = {};
+      rawData.forEach(team => {
+        if (!grouped[team.group]) grouped[team.group] = { teams: [] };
+        grouped[team.group].teams.push({
+          name: team.name,
+          flag: team.flag,
+          players: team.players
+        });
+      });
+      return grouped;
+    }
+
+    async function uploadOne(year) {
+      const raw = year === '2018' ? wc2018 : wc2022;
+      if (!raw) { log(`ERRO: wc${year} não encontrado`); return; }
+      const grouped = buildTeamsGrouped(raw);
+      const groupNames = Object.keys(grouped).sort();
+      log(`\n--- Upload ${year} ---`);
+      log(`Equipas: ${raw.length}, Grupos: ${groupNames.join(', ')}`);
+
+      for (const g of groupNames) {
+        const docData = grouped[g];
+        await db.collection('teams').doc(`${year}_${g}`).set(docData);
+        log(`✅ Grupo ${g}: ${docData.teams.length} equipas`);
+      }
+
+      const totalPlayers = raw.reduce((sum, t) => sum + t.players.length, 0);
+      await db.collection('teams').doc(`${year}_meta`).set({
+        totalTeams: raw.length,
+        totalPlayers: totalPlayers,
+        groups: groupNames,
+        uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      log(`✅ Meta: ${raw.length} equipas, ${totalPlayers} jogadores`);
+      log(`--- Upload ${year} concluído! ---`);
+    }
+
+    async function uploadAll() {
+      await uploadOne('2018');
+      await uploadOne('2022');
+      log('\n🎉 Todos os uploads concluídos!');
+    }
+  </script>
+</body>
+</html>
