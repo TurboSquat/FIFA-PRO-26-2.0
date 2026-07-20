@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="referrer" content="no-referrer"><title>Test 2010 Images</title></head>
+<body>
+<h2>Teste de imagens 2010 (Card ID 125)</h2>
+<div id="results"></div>
+<script>
+const cardId = 125;
+const nums = [0, 1, 30, 31, 32, 49, 50, 51, 68, 69, 70, 87, 88, 89, 106, 107, 108, 122, 300, 400, 500, 600, 638];
+const results = document.getElementById('results');
+nums.forEach(n => {
+  const url = `https://www.laststicker.com/i/cards/${cardId}/${n}.jpg`;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;align-items:center;gap:10px;margin:8px 0;padding:8px;border:1px solid #ccc;border-radius:8px;';
+  const img = new Image();
+  img.width = 100;
+  img.referrerPolicy = 'no-referrer';
+  img.onload = () => { div.style.borderColor = 'green'; status.textContent = 'OK'; };
+  img.onerror = () => { div.style.borderColor = 'red'; status.textContent = 'FALHOU'; };
+  img.src = url;
+  const status = document.createElement('span');
+  status.textContent = '...';
+  div.appendChild(img);
+  div.appendChild(status);
+  const label = document.createElement('span');
+  label.textContent = `Sticker ${n}`;
+  div.appendChild(label);
+  results.appendChild(div);
+});
+</script>
+</body>
+</html>
