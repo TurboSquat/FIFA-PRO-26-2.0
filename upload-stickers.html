@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Stickers para Firebase Storage</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="teams2006.js"></script>
+  <script src="teams2002v3.js"></script>
+  <style>
+    body { font-family: Arial; max-width: 750px; margin: 40px auto; padding: 20px; background: #1a1a2e; color: #fff; }
+    h1 { color: #e94560; }
+    h2 { color: #ffd700; margin-top: 24px; }
+    button { padding: 12px 24px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; margin: 8px; }
+    .upload-btn { background: #4CAF50; color: white; }
+    .upload-btn:hover { background: #45a049; }
+    .upload-btn:disabled { background: #666; cursor: not-allowed; }
+    #log { margin-top: 20px; padding: 16px; background: #16213e; border-radius: 8px; white-space: pre-wrap; font-size: 13px; max-height: 60vh; overflow-y: auto; }
+    input, select { padding: 8px; margin: 4px; border-radius: 4px; border: 1px solid #555; background: #16213e; color: #fff; width: 200px; }
+    label { display: inline-block; width: 130px; }
+    .row { margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>📤 Upload Stickers para Firebase Storage</h1>
+
+  <button class="upload-btn" onclick="login()">🔑 Login</button>
+  <div id="loginStatus" style="margin:8px 0;color:#aaa;"></div>
+
+  <h2>🌐 Proxy CORS</h2>
+  <div class="row">
+    <label>Proxy:</label>
+    <select id="proxySelect">
+      <option value="none">Nenhum (direto)</option>
+      <option value="corsproxy" selected>corsproxy.io/?url=</option>
+      <option value="allorigins">api.allorigins.win/raw?url=</option>
+    </select>
+  </div>
+
+  <h2>⚡ Upload rápido</h2>
+  <div class="row">
+    <label>Álbum:</label>
+    <select id="albumSelect">
+      <option value="2006">2006 (album 3, cards 0-603)</option>
+      <option value="2002">2002 (album 10, cards 0-800)</option>
+      <option value="2018">2018 (album 3852, cards 0-681)</option>
+      <option value="2014">2014 (album 1498, cards 0-700)</option>
+      <option value="2010">2010 (album 125, cards 0-650)</option>
+    </select>
+    <button class="upload-btn" onclick="uploadQuick()">📤 Upload tudo</button>
+  </div>
+
+  <h2>🔧 Upload personalizado</h2>
+  <div class="row">
+    <label>Album ID:</label>
+    <input type="number" id="customAlbum" value="3852">
+  </div>
+  <div class="row">
+    <label>Firebase path:</label>
+    <input type="text" id="customPath" value="stickers/2018">
+  </div>
+  <div class="row">
+    <label>De:</label>
+    <input type="number" id="customStart" value="0">
+    <label>Até:</label>
+    <input type="number" id="customEnd" value="31">
+  </div>
+  <button class="upload-btn" onclick="uploadCustom()">📤 Upload range</button>
+
+  <div id="log">Pronto. Faz login primeiro.</div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPWDIHK5yeEEW75lY_Y15Ir23hXagKhy4",
+      authDomain: "fifarinhas-26.firebaseapp.com",
+      projectId: "fifarinhas-26",
+      storageBucket: "fifarinhas-26.firebasestorage.app",
+      messagingSenderId: "1053411125609",
+      appId: "1:1053411125609:web:baefa77d83d8bb89ad35f8"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const storage = firebase.storage();
+    const auth = firebase.auth();
+
+    let user = null;
+
+    function getProxyUrl(rawUrl) {
+      const p = document.getElementById('proxySelect').value;
+      if (p === 'corsproxy') return 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
+      if (p === 'allorigins') return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl);
+      return rawUrl;
+    }
+
+    function log(msg) {
+      const el = document.getElementById('log');
+      el.textContent += '\n' + msg;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    async function login() {
+      try {
+        const email = prompt('Email:');
+        const pass = prompt('Password:');
+        const cred = await auth.signInWithEmailAndPassword(email, pass);
+        user = cred.user;
+        document.getElementById('loginStatus').textContent = '✅ Logado como ' + user.email;
+        log('✅ Login feito como ' + user.email);
+      } catch (e) {
+        log('❌ Erro login: ' + e.message);
+      }
+    }
+
+    async function fetchAsBlob(url) {
+      const proxyUrl = getProxyUrl(url);
+      log('  Fetch: ' + proxyUrl.substring(0, 80) + '...');
+      const resp = await fetch(proxyUrl);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return await resp.blob();
+    }
+
+    async function uploadOne(path, url) {
+      const blob = await fetchAsBlob(url);
+      const ref = storage.ref().child(path);
+      await ref.put(blob, { contentType: 'image/jpeg' });
+      return await ref.getDownloadURL();
+    }
+
+    async function uploadRange(albumId, basePath, start, end) {
+      let success = 0, fail = 0;
+      for (let i = start; i <= end; i++) {
+        const url = `https://www.laststicker.com/i/cards/${albumId}/${i}.jpg`;
+        const path = `${basePath}/${i}.jpg`;
+        try {
+          await uploadOne(path, url);
+          log(`✅ ${i}`);
+          success++;
+        } catch (e) {
+          log(`❌ ${i}: ${e.message}`);
+          fail++;
+        }
+      }
+      log(`\n📊 ${basePath} (${start}-${end}): ${success} OK, ${fail} falhas`);
+    }
+
+    const albumConfig = {
+      '2006': { id: 3, path: 'stickers/2006', start: 0, end: 603 },
+      '2002': { id: 10, path: 'stickers/2002', start: 0, end: 800 },
+      '2018': { id: 3852, path: 'stickers/2018', start: 0, end: 681 },
+      '2014': { id: 1498, path: 'stickers/2014', start: 0, end: 700 },
+      '2010': { id: 125, path: 'stickers/2010', start: 0, end: 650 }
+    };
+
+    async function uploadQuick() {
+      if (!user) { log('❌ Faz login primeiro'); return; }
+      const key = document.getElementById('albumSelect').value;
+      const cfg = albumConfig[key];
+      if (!cfg) { log('❌ Álbum inválido'); return; }
+      log(`\n--- Upload ${key} (album ${cfg.id}, cards ${cfg.start}-${cfg.end}) ---`);
+      await uploadRange(cfg.id, cfg.path, cfg.start, cfg.end);
+      log(`--- Upload ${key} concluído! ---`);
+    }
+
+    async function uploadCustom() {
+      if (!user) { log('❌ Faz login primeiro'); return; }
+      const albumId = parseInt(document.getElementById('customAlbum').value);
+      const basePath = document.getElementById('customPath').value.trim();
+      const start = parseInt(document.getElementById('customStart').value);
+      const end = parseInt(document.getElementById('customEnd').value);
+      if (isNaN(albumId) || !basePath || isNaN(start) || isNaN(end)) {
+        log('❌ Preenche todos os campos');
+        return;
+      }
+      log(`\n--- Upload custom (album ${albumId}, ${basePath}, ${start}-${end}) ---`);
+      await uploadRange(albumId, basePath, start, end);
+      log('--- Upload custom concluído! ---');
+    }
+  </script>
+</body>
+</html>
