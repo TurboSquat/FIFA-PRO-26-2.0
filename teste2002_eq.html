@@ -1,0 +1,15 @@
+﻿<!DOCTYPE html><html><body><div id="out"></div>
+<script src="teams2002.js"></script>
+<script>
+  try {
+    var keys = Object.keys(teams2002_data);
+    var html = '';
+    keys.forEach(function(g){
+      html += '<h3>Grupo '+g+'</h3>';
+      teams2002_data[g].teams.forEach(function(t){
+        html += '<div>'+t.name+' ('+t.players.length+' jogadores)</div>';
+      });
+    });
+    document.getElementById('out').innerHTML = html;
+  } catch(e){ document.getElementById('out').textContent = 'ERRO: '+e.message; }
+</script></body></html>

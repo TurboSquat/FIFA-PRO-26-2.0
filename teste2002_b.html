@@ -1,0 +1,16 @@
+﻿<!DOCTYPE html><html><body>
+<script src="teams2002.js"></script>
+<script>
+  var out = "ERRO_DESCONHECIDO";
+  try {
+    if (typeof teams2002_data === 'undefined') { out = "teams2002_data INDEFINIDO (ficheiro falhou)"; }
+    else {
+      var g = Object.keys(teams2002_data);
+      var t = 0; g.forEach(x=> t+= teams2002_data[x].teams.length);
+      out = "OK grupos="+g.length+" equipas="+t+" baseSpain="+teamBase2002["Spain"]+" baseSlovenia="+teamBase2002["Slovenia"];
+    }
+  } catch(e){ out = "ERRO: "+e.message; }
+  var fso = new ActiveXObject("Scripting.FileSystemObject");
+  var f = fso.CreateTextFile("teste_result.txt", true);
+  f.Write(out); f.Close();
+</script></body></html>

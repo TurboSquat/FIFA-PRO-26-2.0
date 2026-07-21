@@ -1,0 +1,9 @@
+﻿<!DOCTYPE html><html><body><div id="out"></div>
+<script src="teams2002.js"></script>
+<script>
+  try {
+    var g = Object.keys(teams2002_data);
+    var t = 0; g.forEach(x=> t+= teams2002_data[x].teams.length);
+    document.getElementById('out').textContent = 'OK grupos='+g.length+' equipas='+t+' baseSpain='+teamBase2002['Spain'];
+  } catch(e){ document.getElementById('out').textContent = 'ERRO: '+e.message; }
+</script></body></html>

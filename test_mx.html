@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>test</title></head>
+<body>
+<div id="out"></div>
+<script>
+const teams = {
+  "A": { teams: [
+    { name: "México", flag: "x", players: ["Luis Malagón","Johan Vásquez","Jorge Sánchez","César Montes","Jesús Gallardo","Israel Reyes","Diego Lainez","Carlos Rodríguez","Edson Álvarez","Orbelín Pineda","Marcel Ruiz","Érick Sánchez","Hirving Lozano","Santiago Giménez","Raúl Jiménez","Alexis Vega","Roberto Alvarado","César Huerta"] }
+  ]}
+};
+const team = teams.A.teams[0];
+let html = '';
+team.players.forEach((p, i) => {
+  const stickerNum = i + 3;
+  html += `<div>cromo ${stickerNum}: ${p}</div>`;
+});
+document.getElementById('out').innerHTML = html;
+</script>
+</body></html>
