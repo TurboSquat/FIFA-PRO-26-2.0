@@ -2207,21 +2207,21 @@ async function init() {
   }
   if (currentAlbum === '1994') {
     var fwc1994All = [
-      { name: 'San Francisco', id: 'fwc1994-City San Francisco', num: 1 },
-      { name: 'Boston', id: 'fwc1994-City Boston', num: 2 },
-      { name: 'Orlando', id: 'fwc1994-City Orlando', num: 3 },
-      { name: 'Dallas', id: 'fwc1994-City Dallas', num: 4 },
-      { name: 'Detroit', id: 'fwc1994-City Detroit', num: 5 },
-      { name: 'Chicago', id: 'fwc1994-City Chicago', num: 6 },
-      { name: 'Soldier Field', id: 'fwc1994-Est. Chicago', num: 7 },
-      { name: 'Silverdome', id: 'fwc1994-Est. Detroit', num: 8 },
-      { name: 'Giants Stadium', id: 'fwc1994-Est. New York', num: 9 },
-      { name: 'Foxboro Stadium', id: 'fwc1994-Est. Boston', num: 10 },
-      { name: 'Cotton Bowl', id: 'fwc1994-Est. Dallas', num: 11 },
-      { name: 'Citrus Bowl', id: 'fwc1994-Est. Orlando', num: 12 },
-      { name: 'RFK Stadium', id: 'fwc1994-Est. Washington', num: 13 },
-      { name: 'Stanford Stadium', id: 'fwc1994-Est. San Francisco', num: 14 },
-      { name: 'Rose Bowl', id: 'fwc1994-Est. Los Angeles', num: 15 }
+      { name: 'San Francisco', id: 'fwc1994-Cid. San Francisco', num: 1 },
+      { name: 'Boston', id: 'fwc1994-Cid. Boston', num: 2 },
+      { name: 'Orlando', id: 'fwc1994-Cid. Orlando', num: 3 },
+      { name: 'Dallas', id: 'fwc1994-Cid. Dallas', num: 4 },
+      { name: 'Detroit', id: 'fwc1994-Cid. Detroit', num: 5 },
+      { name: 'Chicago', id: 'fwc1994-Cid. Chicago', num: 6 },
+      { name: 'Soldier Field', id: 'fwc1994-Est. Soldier Field', num: 7 },
+      { name: 'Pontiac Silverdome', id: 'fwc1994-Est. Pontiac Silverdome', num: 8 },
+      { name: 'Giants Stadium', id: 'fwc1994-Est. Giants Stadium', num: 9 },
+      { name: 'Foxboro Stadium', id: 'fwc1994-Est. Foxboro Stadium', num: 10 },
+      { name: 'Cotton Bowl', id: 'fwc1994-Est. Cotton Bowl', num: 11 },
+      { name: 'Citrus Bowl', id: 'fwc1994-Est. Citrus Bowl', num: 12 },
+      { name: 'RFK Memorial Stadium', id: 'fwc1994-Est. RFK Memorial Stadium', num: 13 },
+      { name: 'Stanford Stadium', id: 'fwc1994-Est. Stanford Stadium', num: 14 },
+      { name: 'Rose Bowl', id: 'fwc1994-Est. Rose Bowl', num: 15 }
     ];
     fwc1994All.forEach(s => {
       allPlayers.push({ id: s.id, group: 'FWC', team: 'FWC', name: s.name, pos: 'fwc', num: s.num });
@@ -2376,7 +2376,7 @@ async function init() {
   }
   renderGroupBar();
   render();
-  updateStats();
+  atualizarContadores();
 }
 
 function getStates() { return playerStates; }
@@ -3594,7 +3594,7 @@ function render() {
     }
   }
   main.innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--muted)">Nenhum resultado encontrado</div>';
-  updateStats();
+  atualizarContadores();
 }
 
 function toggleSelecao(el) {
@@ -3655,7 +3655,7 @@ function toggleCoca(v) {
   showCoca = v;
   saveUserData();
   render();
-  updateStats();
+  atualizarContadores();
 }
 
 
@@ -3977,22 +3977,26 @@ function setModalState(s) {
     el.classList.remove('owned','wanted','missing');
     el.classList.add(s);
   }
-  updateStats();
+  atualizarContadores();
   renderGroupBar();
 }
 
-function updateStats() {
-  const activePlayers = showCoca ? allPlayers : allPlayers.filter(p => p.pos !== 'coca');
-  const owned = activePlayers.filter(p => getState(p.id) === 'owned').length;
-  const wanted = activePlayers.filter(p => getState(p.id) === 'wanted').length;
-  const total = activePlayers.length;
+function atualizarContadores() {
+  if (!allPlayers) return;
+  var owned = 0, total = 0;
+  for (var i = 0; i < allPlayers.length; i++) {
+    var p = allPlayers[i];
+    if (p.pos === 'coca') continue;
+    total++;
+    if (getState(p.id) === 'owned') owned++;
+  }
+  document.getElementById('missingBadge').textContent = total - owned;
   document.getElementById('ownedCount').textContent = owned;
   document.getElementById('totalCount').textContent = total;
-  document.getElementById('missingBadge').textContent = total - owned;
   document.getElementById('progressCount').textContent = owned;
   document.getElementById('progressTotal').textContent = total;
   document.getElementById('progressPct').textContent = Math.round((owned / total) * 100);
-  document.getElementById('progressFill').style.width = `${(owned / total) * 100}%`;
+  document.getElementById('progressFill').style.width = (owned / total) * 100 + '%';
 }
 
 let searchTimer = null;
