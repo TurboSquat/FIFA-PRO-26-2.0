@@ -14,6 +14,7 @@
 <script src="teams2006.js"></script>
   <script src="teams2002v3.js"></script>
   <script src="teams1998.js"></script>
+  <script src="teams1994.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCPWDIHK5yeEEW75lY_Y15Ir23hXagKhy4",
@@ -1034,6 +1035,90 @@ body {
 </div>
 
 <script>
+function toggleLoginMode() {
+  isCreatingAccount = !isCreatingAccount;
+  const btn = document.getElementById('loginSubmitBtn');
+  const toggle = document.getElementById('loginToggle');
+  const err = document.getElementById('loginError');
+  const passInput = document.getElementById('loginPass');
+  const nameInput = document.getElementById('loginName');
+  err.style.display = 'none';
+  if (isCreatingAccount) {
+    btn.textContent = 'Criar conta';
+    toggle.innerHTML = 'Já tens conta? <span>Entrar</span>';
+    passInput.placeholder = 'Escolhe uma palavra-passe';
+    nameInput.style.display = 'block';
+  } else {
+    btn.textContent = 'Entrar';
+    toggle.innerHTML = 'Não tens conta? <span>Criar conta</span>';
+    passInput.placeholder = 'Palavra-passe';
+    nameInput.style.display = 'none';
+  }
+}
+function togglePassVis() {
+  const pass = document.getElementById('loginPass');
+  const eye = document.getElementById('passEye');
+  if (pass.type === 'password') { pass.type = 'text'; eye.textContent = '\u{1F648}'; }
+  else { pass.type = 'password'; eye.textContent = '\u{1F441}\u{FE0F}'; }
+}
+function showLoginError(msg) {
+  const err = document.getElementById('loginError');
+  err.textContent = msg;
+  err.style.display = 'block';
+  document.getElementById('loginLoading').style.display = 'none';
+}
+async function loginEmailPass() {
+  const email = document.getElementById('loginUser').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value;
+  const name = document.getElementById('loginName').value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showLoginError('Insere um email válido.'); return; }
+  if (!pass) { showLoginError('Escolhe uma palavra-passe.'); return; }
+  if (pass.length < 4) { showLoginError('A palavra-passe deve ter pelo menos 4 caracteres.'); return; }
+  if (isCreatingAccount && !name) { showLoginError('Insere o teu nome.'); return; }
+  document.getElementById('loginLoading').style.display = 'block';
+  document.getElementById('loginError').style.display = 'none';
+  const key = email.replace(/[^a-z0-9]/g, '_');
+  try {
+    const bannedDoc = await db.collection('banned').doc(key).get();
+    if (bannedDoc.exists) {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('bannedScreen').style.display = 'flex';
+      document.getElementById('loginLoading').style.display = 'none';
+      return;
+    }
+    if (isCreatingAccount) {
+      const doc = await db.collection('accounts').doc(key).get();
+      if (doc.exists) { showLoginError('Este email já está registado.'); document.getElementById('loginLoading').style.display = 'none'; return; }
+      const hashed = await hashPass(pass);
+      await db.collection('accounts').doc(key).set({ pass: hashed, name: name, email: email });
+      currentUser = { name: name, key: key, email: email };
+      localStorage.setItem('fh_session', JSON.stringify(currentUser));
+      const accsC = getAccounts();
+      accsC[key] = { name: name, email: email, pass: hashed };
+      saveAccounts(accsC);
+    } else {
+      const doc = await db.collection('accounts').doc(key).get();
+      if (!doc.exists) { showLoginError('Conta não encontrada.'); document.getElementById('loginLoading').style.display = 'none'; return; }
+      const hashed = await hashPass(pass);
+      if (doc.data().pass !== hashed) { showLoginError('Palavra-passe incorreta.'); document.getElementById('loginLoading').style.display = 'none'; return; }
+      currentUser = { name: doc.data().name, key: key, email: doc.data().email };
+      localStorage.setItem('fh_session', JSON.stringify(currentUser));
+      const accs = getAccounts();
+      accs[key] = { name: doc.data().name, email: email, pass: hashed };
+      saveAccounts(accs);
+    }
+    document.getElementById('loginLoading').style.display = 'none';
+    if (typeof enterApp === 'function') { enterApp(); }
+    else { showLoginError('A carregar... recarrega a página se nada acontecer.'); setTimeout(function(){ location.reload(); }, 2000); }
+  } catch (e) {
+    console.error('Erro login:', e);
+    showLoginError('Erro de ligação. Verifica a internet.');
+    document.getElementById('loginLoading').style.display = 'none';
+  }
+}
+</script>
+
+<script>
 let teams = {
   "A": { teams: [
     { name: "México", flag: "\u{1F1F2}\u{1F1FD}", players: ["Luis Malagón","Johan Vásquez","Jorge Sánchez","César Montes","Jesús Gallardo","Israel Reyes","Diego Lainez","Carlos Rodríguez","Edson Álvarez","Orbelín Pineda","Marcel Ruiz","Érick Sánchez","Hirving Lozano","Santiago Giménez","Raúl Jiménez","Alexis Vega","Roberto Alvarado","César Huerta"] },
@@ -1118,14 +1203,15 @@ const teams2010 = typeof teams2010_data !== 'undefined' ? teams2010_data : {};
 const teams2006 = typeof teams2006_data !== 'undefined' ? teams2006_data : {};
 const teams2002 = typeof teams2002_data !== 'undefined' ? teams2002_data : {};
 const teams1998 = typeof teams1998_data !== 'undefined' ? teams1998_data : {};
+const teams1994 = typeof teams1994_data !== 'undefined' ? teams1994_data : {};
 if (typeof teams2002_data === 'undefined') console.warn('ATENÇÃO: teams2002_data não carregou (teams2002.js falhou). Verifique o ficheiro teams2002v2.js');
 
 async function loadTeamsFromFirestore() {
-  const years = ['2010', '2014', '2018', '2022', '2006', '2002', '1998'];
+  const years = ['2010', '2014', '2018', '2022', '2006', '2002', '1998', '1994'];
   const groups = ['A','B','C','D','E','F','G','H'];
   const promises = [];
   for (const year of years) {
-    const target = year === '2010' ? teams2010 : (year === '2014' ? teams2014 : (year === '2018' ? teams2018 : (year === '2006' ? teams2006 : (year === '2002' ? teams2002 : (year === '1998' ? teams1998 : teams2022)))));
+    const target = year === '2010' ? teams2010 : (year === '2014' ? teams2014 : (year === '2018' ? teams2018 : (year === '2006' ? teams2006 : (year === '2002' ? teams2002 : (year === '1998' ? teams1998 : (year === '1994' ? teams1994 : teams2022))))));
     for (const g of groups) {
       promises.push(
         db.collection('teams').doc(`${year}_${g}`).get().then(snap => {
@@ -1220,7 +1306,8 @@ const teamIso = {
   "Brasil":"br","Croácia":"hr","México":"mx","Camarões":"cm","Espanha":"es","Países Baixos":"nl","Chile":"cl","Austrália":"au","Colômbia":"co","Grécia":"gr","Costa do Marfim":"ci","Japão":"jp","Uruguai":"uy","Costa Rica":"cr","Inglaterra":"gb","Itália":"it","Suíça":"ch","Equador":"ec","França":"fr","Honduras":"hn","Argentina":"ar","Bósnia e Herzegovina":"ba","Irã":"ir","Nigéria":"ng","Alemanha":"de","Portugal":"pt","Gana":"gh","Estados Unidos":"us","Bélgica":"be","Argélia":"dz","Rússia":"ru","Coreia do Sul":"kr",
   "South Africa":"za","Uruguay":"uy","France":"fr","Argentina":"ar","Nigeria":"ng","South Korea":"kr","Greece":"gr","England":"gb","United States":"us","Algeria":"dz","Slovenia":"si","Germany":"de","Australia":"au","Serbia":"rs","Ghana":"gh","Netherlands":"nl","Denmark":"dk","Cameroon":"cm","Italy":"it","Paraguay":"py","New Zealand":"nz","Slovakia":"sk","Brazil":"br","North Korea":"kp","Ivory Coast":"ci","Portugal":"pt","Spain":"es","Switzerland":"ch","Honduras":"hn","Chile":"cl","Mexico":"mx","Japan":"jp",
   "Serbia and Montenegro":"rs","Trinidad and Tobago":"tt","Togo":"tg","Angola":"ao","Czech Republic":"cz","Ukraine":"ua","Poland":"pl","Iran":"ir","Tunisia":"tn","Saudi Arabia":"sa","Sweden":"se","Costa Rica":"cr","Croatia":"hr","Ecuador":"ec",  "USA":"us","China":"cn","Ireland":"ie",
-  "Scotland":"gb","Morocco":"ma","Norway":"no","Austria":"at","Bulgaria":"bg","Belgium":"be","Yugoslavia":"rs","Colombia":"co","Romania":"ro","Jamaica":"jm"
+  "Scotland":"gb","Morocco":"ma","Norway":"no","Austria":"at","Bulgaria":"bg","Belgium":"be","Yugoslavia":"rs","Colombia":"co","Romania":"ro","Jamaica":"jm",
+  "Russia":"ru","Bolivia":"bo","Turkey":"tr","Polónia":"pl"
 };
 function getFlagImg(name, size) {
   const iso = teamIso[name];
@@ -1519,6 +1606,7 @@ let _states2010 = {};
 let _states2006 = {};
 let _states2002 = {};
 let _states1998 = {};
+let _states1994 = {};
 
 function loadActivePlayerStates() {
   if (currentAlbum === '2026') playerStates = _states2026;
@@ -1529,6 +1617,7 @@ function loadActivePlayerStates() {
   else if (currentAlbum === '2006') playerStates = _states2006;
   else if (currentAlbum === '2002') playerStates = _states2002;
   else if (currentAlbum === '1998') playerStates = _states1998;
+  else if (currentAlbum === '1994') playerStates = _states1994;
   else playerStates = _states2006;
 }
 
@@ -1695,6 +1784,7 @@ async function deleteAllData() {
   else if (currentAlbum === '2006') { _states2006 = {}; playerStates = _states2006; }
   else if (currentAlbum === '2002') { _states2002 = {}; playerStates = _states2002; }
   else if (currentAlbum === '1998') { _states1998 = {}; playerStates = _states1998; }
+  else if (currentAlbum === '1994') { _states1994 = {}; playerStates = _states1994; }
   else { _states2006 = {}; playerStates = _states2006; }
   showCoca = false;
   if (currentUser) {
@@ -1772,6 +1862,7 @@ async function loadUserData() {
       _states2006 = data.playerStates2006 || {};
       _states2002 = data.playerStates2002 || {};
       _states1998 = data.playerStates1998 || {};
+      _states1994 = data.playerStates1994 || {};
       currentAlbum = data.currentAlbum || '2026';
       showCoca = data.showCoca !== undefined ? data.showCoca : true;
       if (data.displayName) currentUser.name = data.displayName;
@@ -1796,6 +1887,8 @@ async function loadUserData() {
       _states2010 = {};
       _states2006 = {};
       _states2002 = {};
+      _states1998 = {};
+      _states1994 = {};
       currentAlbum = '2026';
       showCoca = false;
     }
@@ -1811,6 +1904,8 @@ async function loadUserData() {
     _states2010 = {};
     _states2006 = {};
     _states2002 = {};
+    _states1998 = {};
+    _states1994 = {};
     currentAlbum = '2026';
     loadActivePlayerStates();
   }
@@ -1830,6 +1925,7 @@ function saveUserData() {
         playerStates2006: _states2006,
         playerStates2002: _states2002,
         playerStates1998: _states1998,
+        playerStates1994: _states1994,
         currentAlbum,
         showCoca,
         displayName: currentUser.name || '',
@@ -1897,12 +1993,12 @@ async function init() {
     await loadTeamsFromFirestore();
     rebuildTeamOrders();
   }
-  if (currentAlbum === '2014' || currentAlbum === '2010' || currentAlbum === '2006' || currentAlbum === '2002' || currentAlbum === '1998') {
+  if (currentAlbum === '2014' || currentAlbum === '2010' || currentAlbum === '2006' || currentAlbum === '2002' || currentAlbum === '1998' || currentAlbum === '1994') {
     rebuildTeamOrders();
   }
   if (allPlayers.length === 0) {
   let num = 1;
-  const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : teams2018))))));
+  const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : (currentAlbum === '1994' ? teams1994 : teams2018)))))));
   if (currentAlbum === '2026') {
     fwcStickers.forEach(s => {
       allPlayers.push({ id: `fwc-${s.num}`, group: 'FWC', team: 'FWC', name: s.name, pos: 'fwc', num });
@@ -2109,6 +2205,28 @@ async function init() {
       allPlayers.push({ id: s.id, group: 'FWC', team: 'FWC', name: s.name, pos: 'fwc', num: s.num });
     });
   }
+  if (currentAlbum === '1994') {
+    var fwc1994All = [
+      { name: 'San Francisco', id: 'fwc1994-City San Francisco', num: 1 },
+      { name: 'Boston', id: 'fwc1994-City Boston', num: 2 },
+      { name: 'Orlando', id: 'fwc1994-City Orlando', num: 3 },
+      { name: 'Dallas', id: 'fwc1994-City Dallas', num: 4 },
+      { name: 'Detroit', id: 'fwc1994-City Detroit', num: 5 },
+      { name: 'Chicago', id: 'fwc1994-City Chicago', num: 6 },
+      { name: 'Soldier Field', id: 'fwc1994-Est. Chicago', num: 7 },
+      { name: 'Silverdome', id: 'fwc1994-Est. Detroit', num: 8 },
+      { name: 'Giants Stadium', id: 'fwc1994-Est. New York', num: 9 },
+      { name: 'Foxboro Stadium', id: 'fwc1994-Est. Boston', num: 10 },
+      { name: 'Cotton Bowl', id: 'fwc1994-Est. Dallas', num: 11 },
+      { name: 'Citrus Bowl', id: 'fwc1994-Est. Orlando', num: 12 },
+      { name: 'RFK Stadium', id: 'fwc1994-Est. Washington', num: 13 },
+      { name: 'Stanford Stadium', id: 'fwc1994-Est. San Francisco', num: 14 },
+      { name: 'Rose Bowl', id: 'fwc1994-Est. Los Angeles', num: 15 }
+    ];
+    fwc1994All.forEach(s => {
+      allPlayers.push({ id: s.id, group: 'FWC', team: 'FWC', name: s.name, pos: 'fwc', num: s.num });
+    });
+  }
   if (currentAlbum === '2006') {
     var fwc2006All = [
       { name: 'Official Match Ball Teamgeist', id: 'fwc2006-Intro Ball', num: 0 },
@@ -2179,12 +2297,13 @@ async function init() {
           allPlayers.push({ id, group: gName, team: team.name, name: p, pos, num });
           num++;
         });
-      } else if (currentAlbum === '2014' || currentAlbum === '2010' || currentAlbum === '2006' || currentAlbum === '2002' || currentAlbum === '1998') {
-        const getSeq = (t, p) => currentAlbum === '2014' ? get2014SeqNum(t, p) : (currentAlbum === '2010' ? get2010SeqNum(t, p) : (currentAlbum === '2006' ? get2006SeqNum(t, p) : (currentAlbum === '2002' ? get2002SeqNum(t, p) : get1998SeqNum(t, p))));
+      } else if (currentAlbum === '2014' || currentAlbum === '2010' || currentAlbum === '2006' || currentAlbum === '2002' || currentAlbum === '1998' || currentAlbum === '1994') {
+        const getSeq = (t, p) => currentAlbum === '2014' ? get2014SeqNum(t, p) : (currentAlbum === '2010' ? get2010SeqNum(t, p) : (currentAlbum === '2006' ? get2006SeqNum(t, p) : (currentAlbum === '2002' ? get2002SeqNum(t, p) : (currentAlbum === '1994' ? get1994SeqNum(t, p) : get1998SeqNum(t, p)))));
         const idBadge = `${gName}-${team.name}-badge`;
         allPlayers.push({ id: idBadge, group: gName, team: team.name, name: 'Emblema', pos: 'badge', num: getSeq(team.name, 1) });
         const idPhoto = `${gName}-${team.name}-photo`;
-        allPlayers.push({ id: idPhoto, group: gName, team: team.name, name: 'Foto de Equipa', pos: 'photo', num: getSeq(team.name, 2) });
+        const photoNum = (currentAlbum === '1998' && teamHasNoTeamPage1998 && teamHasNoTeamPage1998[team.name]) ? 0 : getSeq(team.name, 2);
+        if (photoNum > 0) allPlayers.push({ id: idPhoto, group: gName, team: team.name, name: 'Foto de Equipa', pos: 'photo', num: photoNum });
         team.players.forEach((p, i) => {
           const pos = i < 3 ? 'GR' : i < 9 ? 'ZAG' : i < 14 ? 'MD' : 'AT';
           const id = `${gName}-${team.name}-${i}`;
@@ -2292,7 +2411,7 @@ function setPage(p) {
 
 function renderGroupBar() {
   const bar = document.getElementById('groupBar');
-  const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : teams2018))))));
+  const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : (currentAlbum === '1994' ? teams1994 : teams2018)))))));
   let html = `<div class="group-btn active" onclick="setGroup('all')">Todos</div>`;
   if (currentAlbum === '2026') {
     html += `<div class="group-btn" onclick="setGroup('FWC')">⭐ FWC</div>`;
@@ -2337,16 +2456,16 @@ function render() {
     const wanted = activePlayers.filter(p => getState(p.id) === 'wanted').length;
     const total = activePlayers.length;
     const pct = total > 0 ? Math.round((owned / total) * 100) : 0;
-    const wcYear = currentAlbum === '2022' ? 2022 : (currentAlbum === '2018' ? 2018 : (currentAlbum === '2010' ? 2010 : (currentAlbum === '2006' ? 2006 : (currentAlbum === '2002' ? 2002 : (currentAlbum === '1998' ? 1998 : 2026)))));
+    const wcYear = currentAlbum === '2022' ? 2022 : (currentAlbum === '2018' ? 2018 : (currentAlbum === '2010' ? 2010 : (currentAlbum === '2006' ? 2006 : (currentAlbum === '2002' ? 2002 : (currentAlbum === '1998' ? 1998 : (currentAlbum === '1994' ? 1994 : 2026))))));
     
-    const worldCup = new Date(currentAlbum === '2022' ? '2022-11-20T00:00:00' : (currentAlbum === '2018' ? '2018-06-14T00:00:00' : (currentAlbum === '2010' ? '2010-06-11T00:00:00' : (currentAlbum === '2006' ? '2006-06-09T00:00:00' : (currentAlbum === '2002' ? '2002-05-31T00:00:00' : (currentAlbum === '1998' ? '1998-06-10T00:00:00' : '2026-06-11T00:00:00'))))));
+    const worldCup = new Date(currentAlbum === '2022' ? '2022-11-20T00:00:00' : (currentAlbum === '2018' ? '2018-06-14T00:00:00' : (currentAlbum === '2010' ? '2010-06-11T00:00:00' : (currentAlbum === '2006' ? '2006-06-09T00:00:00' : (currentAlbum === '2002' ? '2002-05-31T00:00:00' : (currentAlbum === '1998' ? '1998-06-10T00:00:00' : (currentAlbum === '1994' ? '1994-06-17T00:00:00' : '2026-06-11T00:00:00')))))));
     const now = new Date();
     const diff = worldCup - now;
     const cwDays = diff > 0 ? Math.floor(diff / 86400000) : 0;
     const cwHours = diff > 0 ? Math.floor((diff % 86400000) / 3600000) : 0;
     
     let groupStats = '';
-    const statsTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : teams2018))))));
+    const statsTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : (currentAlbum === '1994' ? teams1994 : teams2018)))))));
     for (const [gName, gData] of Object.entries(statsTeams)) {
       let gTotal = 0, gOwned = 0;
       for (const team of gData.teams) {
@@ -2589,7 +2708,7 @@ function render() {
     return;
   }
 
-  const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : teams2018))))));
+  const activeTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : (currentAlbum === '1994' ? teams1994 : teams2018)))))));
   const activeTeamOrder = getActiveTeamOrder();
   const groups = (currentPage === 'grupos' && currentGroup !== 'all' && currentGroup !== 'FWC' && currentGroup !== 'Coca-Cola') ? [currentGroup] : (currentGroup === 'FWC' || currentGroup === 'Coca-Cola') ? [] : Object.keys(activeTeams);
 
@@ -3014,6 +3133,49 @@ function render() {
     html += renderFwc1998Section(fwc1998Estadios, 'Estádios', '🏟️');
   }
 
+  if (currentAlbum === '1994' && (currentGroup === 'all' || currentGroup === 'FWC')) {
+    var fwc1994Cidades = [
+      { name: 'San Francisco', id: 'fwc1994-Cid. San Francisco', num: 1 },
+      { name: 'Boston', id: 'fwc1994-Cid. Boston', num: 2 },
+      { name: 'Orlando', id: 'fwc1994-Cid. Orlando', num: 3 },
+      { name: 'Dallas', id: 'fwc1994-Cid. Dallas', num: 4 },
+      { name: 'Detroit', id: 'fwc1994-Cid. Detroit', num: 5 },
+      { name: 'Chicago', id: 'fwc1994-Cid. Chicago', num: 6 }
+    ];
+    var fwc1994Estadios = [
+      { name: 'Soldier Field', id: 'fwc1994-Est. Soldier Field', num: 7 },
+      { name: 'Pontiac Silverdome', id: 'fwc1994-Est. Pontiac Silverdome', num: 8 },
+      { name: 'Giants Stadium', id: 'fwc1994-Est. Giants Stadium', num: 9 },
+      { name: 'Foxboro Stadium', id: 'fwc1994-Est. Foxboro Stadium', num: 10 },
+      { name: 'Cotton Bowl', id: 'fwc1994-Est. Cotton Bowl', num: 11 },
+      { name: 'Citrus Bowl', id: 'fwc1994-Est. Citrus Bowl', num: 12 },
+      { name: 'RFK Memorial Stadium', id: 'fwc1994-Est. RFK Memorial Stadium', num: 13 },
+      { name: 'Stanford Stadium', id: 'fwc1994-Est. Stanford Stadium', num: 14 },
+      { name: 'Rose Bowl', id: 'fwc1994-Est. Rose Bowl', num: 15 }
+    ];
+    function renderFwc1994Section(items, title, icon) {
+      const matchAny = !search || 'fwc'.includes(search) || 'world cup'.includes(search) || 'fifa'.includes(search) || title.toLowerCase().includes(search) || items.some(s => s.name.toLowerCase().includes(search));
+      const matchTabAny = currentTab === 'all' || items.some(s => { const st = getState(s.id); return (currentTab === 'owned' && st === 'owned') || (currentTab === 'missing' && (st === 'missing' || st === 'wanted')) || (currentTab === 'wanted' && st === 'wanted'); });
+      if (!matchAny || !matchTabAny) return '';
+      let h = '';
+      items.forEach(s => {
+        const st = getState(s.id);
+        const matchTab = currentTab === 'all' || (currentTab === 'owned' && st === 'owned') || (currentTab === 'missing' && (st === 'missing' || st === 'wanted')) || (currentTab === 'wanted' && st === 'wanted');
+        if (!matchTab) return;
+        const imgUrl = `https://www.laststicker.com/i/cards/8/${s.num}.jpg`;
+        h += `<div class="sticker fwc ${st}" data-id="${s.id}" style="aspect-ratio:4/3;" onclick="openModal('${s.id}','${s.name}','fwc','FWC',${s.num})">
+          <img class="sticker-bg" loading="lazy" src="${imgUrl}" onerror="this.style.display='none'">
+          <div class="num">${String(s.num).padStart(2,'0')}</div>
+          <div class="name">${s.name}</div>
+        </div>`;
+      });
+      if (!h) return '';
+      return `<div style="font-size:0.8em;font-weight:800;color:var(--text);padding:12px 0 4px;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">${icon} ${title}</div><div class="stickers">${h}</div>`;
+    }
+    html += renderFwc1994Section(fwc1994Cidades, 'Cidades', '🏙️');
+    html += renderFwc1994Section(fwc1994Estadios, 'Estádios', '🏟️');
+  }
+
   for (const gName of groups) {
     let groupHTML = '';
     const gData = activeTeams[gName];
@@ -3030,7 +3192,7 @@ function render() {
       let badgeHTML = '';
       let photoHTML = '';
       let count = 0;
-      const totalStickers = (currentAlbum === '1998' && get1998SeqNum(team.name, 2) === 0) ? team.players.length + 1 : team.players.length + 2;
+      const totalStickers = currentAlbum === '1994' && teamHasNoTeamPage1994 && teamHasNoTeamPage1994[team.name] ? (['Bolivia','Nigeria','Saudi Arabia'].includes(team.name) ? 10 : 17) : (currentAlbum === '1998' && teamHasNoTeamPage1998 && teamHasNoTeamPage1998[team.name] ? (['USA','Iran','Jamaica'].includes(team.name) ? 9 : 17) : team.players.length + 2);
       const is2022 = currentAlbum === '2022';
       const idBadge = `${gName}-${team.name}-badge`;
       const stateBadge = getState(idBadge);
@@ -3223,17 +3385,18 @@ function render() {
           </div>`;
         }
         playersHTML = emblemaFirst ? (badgeHTML + photoHTML + playersOnlyHTML) : (photoHTML + badgeHTML + playersOnlyHTML);
-      } else if (currentAlbum === '2006' || currentAlbum === '2002' || currentAlbum === '1998') {
-        const getSeq = (t, p) => currentAlbum === '2006' ? get2006SeqNum(t, p) : (currentAlbum === '2002' ? get2002SeqNum(t, p) : get1998SeqNum(t, p));
+      } else if (currentAlbum === '2006' || currentAlbum === '2002' || currentAlbum === '1998' || currentAlbum === '1994') {
+        const getSeq = (t, p) => currentAlbum === '2006' ? get2006SeqNum(t, p) : (currentAlbum === '2002' ? get2002SeqNum(t, p) : (currentAlbum === '1994' ? get1994SeqNum(t, p) : get1998SeqNum(t, p)));
         const is2006 = currentAlbum === '2006';
         const is1998 = currentAlbum === '1998';
+        const is1994 = currentAlbum === '1994';
         const photoSeq = getSeq(team.name, 2);
         const badgeSeq = getSeq(team.name, 1);
         const photoStyle = (currentAlbum === '2006' && ['Angola', 'Ghana', 'Saudi Arabia'].includes(team.name)) ? 'aspect-ratio:4/3;' : (currentAlbum === '2006' ? 'aspect-ratio:3/4;' : 'aspect-ratio:4/3;');
         const emblemaHorizontais2002 = ['Spain', 'Slovenia', 'South Korea', 'Ireland', 'England'];
-        const badgeStyle = currentAlbum === '2006' ? 'aspect-ratio:4/3;' : (emblemaHorizontais2002.includes(team.name) ? 'aspect-ratio:4/3;max-width:96%;margin:0 auto;' : '');
+        const badgeStyle = currentAlbum === '2006' ? 'aspect-ratio:4/3;' : (currentAlbum === '1994' && ['Bolivia', 'Nigeria', 'Saudi Arabia'].includes(team.name) ? 'aspect-ratio:4/3;' : (emblemaHorizontais2002.includes(team.name) ? 'aspect-ratio:4/3;max-width:96%;margin:0 auto;' : ''));
         const emblemaFirst = currentAlbum === '2006';
-        const ordenarPorNum = currentAlbum === '2002' && ['Ecuador', 'Russia', 'Tunisia'].includes(team.name);
+        const ordenarPorNum = currentAlbum === '1994' || (currentAlbum === '2002' && ['Ecuador', 'Russia', 'Tunisia'].includes(team.name));
         let photoHTML = '';
         let badgeHTML = '';
         let playersOnlyHTML = '';
@@ -3248,7 +3411,7 @@ function render() {
           if (!matchSearch || !matchTab) return;
           count++;
           const playerUrl = getStickerImageUrl(team.name, i + 3);
-          const playerStyle = (currentAlbum === '2002' && p.includes('/')) ? 'aspect-ratio:4/3;' : (currentAlbum === '2006' && ['Angola', 'Ghana', 'Saudi Arabia'].includes(team.name)) ? 'aspect-ratio:4/3;' : (currentAlbum === '1998' && team.name === 'Jamaica') ? 'aspect-ratio:4/3;' : 'aspect-ratio:3/4;';
+          const playerStyle = (currentAlbum === '2002' && p.includes('/')) ? 'aspect-ratio:4/3;' : (currentAlbum === '2006' && ['Angola', 'Ghana', 'Saudi Arabia'].includes(team.name)) ? 'aspect-ratio:4/3;' : (currentAlbum === '1998' && team.name === 'Jamaica') ? 'aspect-ratio:4/3;' : (currentAlbum === '1994' && ['Bolivia', 'Nigeria', 'Saudi Arabia'].includes(team.name)) ? 'aspect-ratio:4/3;' : 'aspect-ratio:3/4;';
           const html = `<div class="sticker ${state}" data-id="${id}" style="${playerStyle}" onclick="openModal('${id}','${p.replace(/'/g,"\\'")}','${pos}','${team.name.replace(/'/g,"\\'")}',${stickerNum})">
             <img class="sticker-bg" loading="lazy" src="${playerUrl}" data-team="${team.name}" data-player="${p}" data-num="${stickerNum}" data-pn="${p}" onerror="handleStickerError(this)">
             <div class="num">${String(stickerNum).padStart(2,'0')}</div>
@@ -3268,7 +3431,7 @@ function render() {
           </div>`;
           if (ordenarPorNum) stickerParts.push({ n: badgeSeq, html }); else badgeHTML += html;
         }
-        if (matchTeam && matchTabPhoto && photoSeq > 0) {
+        if (matchTeam && matchTabPhoto && photoSeq > 0 && !(currentAlbum === '1998' && teamHasNoTeamPage1998 && teamHasNoTeamPage1998[team.name])) {
           count++;
           const photoUrl = getStickerImageUrl(team.name, 2);
           const html = `<div class="sticker photo ${statePhoto}" data-id="${idPhoto}" style="${photoStyle}" onclick="openModal('${idPhoto}','Foto de Equipa','photo','${team.name.replace(/'/g,"\\'")}',${photoSeq})">
@@ -3453,7 +3616,7 @@ function toggleDotsMenu(el) {
 }
 
 function selectAllTeam(gName, teamName) {
-  const actT = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : teams2018))))));
+  const actT = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : (currentAlbum === '1994' ? teams1994 : teams2018)))))));
   const team = actT[gName].teams.find(t => t.name === teamName);
   if (!team) return;
   setState(`${gName}-${teamName}-badge`, 'owned');
@@ -3464,7 +3627,7 @@ function selectAllTeam(gName, teamName) {
 }
 
 function removeAllTeam(gName, teamName) {
-  const actT = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : teams2018))))));
+  const actT = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : (currentAlbum === '1994' ? teams1994 : teams2018)))))));
   const team = actT[gName].teams.find(t => t.name === teamName);
   if (!team) return;
   setState(`${gName}-${teamName}-badge`, 'missing');
@@ -3506,6 +3669,7 @@ const teamOrder2010 = [];
 const teamOrder2006 = [];
 const teamOrder2002 = [];
 const teamOrder1998 = [];
+const teamOrder1994 = [];
 function rebuildTeamOrders() {
   teamOrder2022.length = 0;
   teamOrder2018.length = 0;
@@ -3514,6 +3678,7 @@ function rebuildTeamOrders() {
   teamOrder2006.length = 0;
   teamOrder2002.length = 0;
   teamOrder1998.length = 0;
+  teamOrder1994.length = 0;
   const grpOrder = ['A','B','C','D','E','F','G','H'];
   grpOrder.forEach(g => {
     if (teams2022[g]) teams2022[g].teams.forEach(t => teamOrder2022.push(t.name));
@@ -3523,10 +3688,11 @@ function rebuildTeamOrders() {
     if (teams2006[g]) teams2006[g].teams.forEach(t => teamOrder2006.push(t.name));
     if (teams2002[g]) teams2002[g].teams.forEach(t => teamOrder2002.push(t.name));
     if (teams1998[g]) teams1998[g].teams.forEach(t => teamOrder1998.push(t.name));
-        });
-      }
+    if (teams1994[g]) teams1994[g].teams.forEach(t => teamOrder1994.push(t.name));
+  });
+}
 
-function getActiveTeamOrder() { return currentAlbum === '2026' ? teamOrder : (currentAlbum === '2022' ? teamOrder2022 : (currentAlbum === '2014' ? teamOrder2014 : (currentAlbum === '2010' ? teamOrder2010 : (currentAlbum === '2006' ? teamOrder2006 : (currentAlbum === '2002' ? teamOrder2002 : (currentAlbum === '1998' ? teamOrder1998 : teamOrder2018)))))); }
+function getActiveTeamOrder() { return currentAlbum === '2026' ? teamOrder : (currentAlbum === '2022' ? teamOrder2022 : (currentAlbum === '2014' ? teamOrder2014 : (currentAlbum === '2010' ? teamOrder2010 : (currentAlbum === '2006' ? teamOrder2006 : (currentAlbum === '2002' ? teamOrder2002 : (currentAlbum === '1998' ? teamOrder1998 : (currentAlbum === '1994' ? teamOrder1994 : teamOrder2018))))))); }
 
 function getStickerImageUrl(teamName, stickerPos) {
   if (currentAlbum === '2022') {
@@ -3564,6 +3730,11 @@ function getStickerImageUrl(teamName, stickerPos) {
     if (!seq) return '';
     return `https://www.laststicker.com/i/cards/9/${seq}.jpg`;
   }
+  if (currentAlbum === '1994') {
+    const seq = get1994SeqNum(teamName, stickerPos);
+    if (!seq) return '';
+    return `https://www.laststicker.com/i/cards/8/${seq}.jpg`;
+  }
   const idx = teamOrder.indexOf(teamName);
   if (idx === -1) return '';
   const imgNum = (idx * 20) + stickerPos + 20;
@@ -3597,12 +3768,26 @@ function get2006SeqNum(teamName, stickerPos) {
   if (!base) return 0;
   return base + stickerPos - 1;
 }
+function get1994SeqNum(teamName, stickerPos) {
+  const base = teamBase1994[teamName];
+  if (!base) return 0;
+  if (teamHasNoTeamPage1994 && teamHasNoTeamPage1994[teamName]) {
+    if (stickerPos === 1) return base;
+    if (stickerPos === 2) return base + 9;
+    return base + stickerPos - 2;
+  }
+  if (stickerPos === 1) return base + 4;
+  if (stickerPos === 2) return base + 13;
+  if (stickerPos <= 6) return base + stickerPos - 3;
+  if (stickerPos <= 14) return base + stickerPos - 2;
+  return base + stickerPos - 1;
+}
 function get1998SeqNum(teamName, stickerPos) {
   const base = teamBase1998[teamName];
   if (!base) return 0;
   if (teamName === 'USA' || teamName === 'Iran' || teamName === 'Jamaica') {
     if (stickerPos === 1) return base;
-    if (stickerPos === 2) return 0;
+    if (stickerPos === 2) return base + 3;
     const idx = stickerPos - 3;
     if (idx < 4) return base + 1 + Math.floor(idx / 2);
     return base + 4 + Math.floor((idx - 4) / 2);
@@ -3666,6 +3851,11 @@ function getStickerImageUrlPng(teamName, stickerPos) {
     if (!seq) return '';
     return `https://www.laststicker.com/i/cards/9/${seq}.png`;
   }
+  if (currentAlbum === '1994') {
+    const seq = get1994SeqNum(teamName, stickerPos);
+    if (!seq) return '';
+    return `https://www.laststicker.com/i/cards/8/${seq}.jpg`;
+  }
   const idx = teamOrder.indexOf(teamName);
   if (idx === -1) return '';
   const imgNum = (idx * 20) + stickerPos + 20;
@@ -3680,7 +3870,7 @@ function openModal(id, name, pos, team, num) {
   document.getElementById('modalPos').textContent = `${pos} · ${team}`;
   const bigImg = document.getElementById('modalStickerImg');
   const bigImgTag = document.getElementById('modalStickerImgTag');
-  bigImg.classList.toggle('photo-modal', pos === 'photo' || (currentAlbum === '2006' && pos === 'EMB') || (currentAlbum === '2014' && pos === 'EMB') || (currentAlbum === '2002' && pos === 'EMB' && emblemaHorizontais2002.includes(team)) || (currentAlbum === '2002' && pos !== 'EMB' && pos !== 'photo' && name.includes('/')) || (currentAlbum === '2006' && pos !== 'EMB' && ['Angola', 'Ghana', 'Saudi Arabia'].includes(team)) || (currentAlbum === '1998' && team === 'Jamaica' && pos !== 'EMB' && pos !== 'photo'));
+  bigImg.classList.toggle('photo-modal', pos === 'photo' || (currentAlbum === '2006' && pos === 'EMB') || (currentAlbum === '2014' && pos === 'EMB') || (currentAlbum === '2002' && pos === 'EMB' && emblemaHorizontais2002.includes(team)) || (currentAlbum === '2002' && pos !== 'EMB' && pos !== 'photo' && name.includes('/')) || (currentAlbum === '2006' && pos !== 'EMB' && ['Angola', 'Ghana', 'Saudi Arabia'].includes(team)) || (currentAlbum === '1998' && team === 'Jamaica' && pos !== 'EMB' && pos !== 'photo') || (currentAlbum === '1994' && ['Bolivia', 'Nigeria', 'Saudi Arabia'].includes(team)));
   bigImg.classList.toggle('badge-horiz-2002', currentAlbum === '2002' && pos === 'EMB' && emblemaHorizontais2002.includes(team));
   bigImg.classList.toggle('fwc-modal', pos === 'fwc');
   let imgUrl = '';
@@ -3700,6 +3890,8 @@ function openModal(id, name, pos, team, num) {
       imgUrl = `https://www.laststicker.com/i/cards/10/${num}.jpg`;
     } else if (currentAlbum === '1998') {
       imgUrl = `https://www.laststicker.com/i/cards/9/${num}.jpg`;
+    } else if (currentAlbum === '1994') {
+      imgUrl = `https://www.laststicker.com/i/cards/8/${num}.jpg`;
     } else {
       const fireNum = num + 1;
       imgUrl = `https://firebasestorage.googleapis.com/v0/b/centralcopa-prod.firebasestorage.app/o/public%2Fstickers%2FWC2026_BR%2F${fireNum}.jpg?alt=media`;
@@ -3719,15 +3911,17 @@ function openModal(id, name, pos, team, num) {
       imgUrl = `https://www.laststicker.com/i/cards/3/${num}.jpg`;
     } else if (currentAlbum === '2002') {
       imgUrl = `https://www.laststicker.com/i/cards/10/${num}.jpg`;
-    } else if (currentAlbum === '1998') {
+} else if (currentAlbum === '1998') {
       imgUrl = `https://www.laststicker.com/i/cards/9/${num}.jpg`;
+    } else if (currentAlbum === '1994') {
+      imgUrl = `https://www.laststicker.com/i/cards/8/${num}.jpg`;
     } else {
       imgUrl = getStickerImageUrl(team, num);
-  }
+    }
   if (imgUrl) {
     bigImgTag.src = imgUrl;
     bigImg.style.display = 'flex';
-    const pngUrl = (pos === 'fwc' || pos === 'FWC') ? imgUrl.replace('.jpg', '.png') : (pos === 'Coca-Cola' ? imgUrl.replace('.jpg', '.png') : ((currentAlbum === '2018' || currentAlbum === '2014' || currentAlbum === '2010' || currentAlbum === '2006' || currentAlbum === '2002' || currentAlbum === '1998') ? imgUrl : getStickerImageUrlPng(team, num)));
+    const pngUrl = (pos === 'fwc' || pos === 'FWC') ? imgUrl.replace('.jpg', '.png') : (pos === 'Coca-Cola' ? imgUrl.replace('.jpg', '.png') : ((currentAlbum === '2018' || currentAlbum === '2014' || currentAlbum === '2010' || currentAlbum === '2006' || currentAlbum === '2002' || currentAlbum === '1998' || currentAlbum === '1994') ? imgUrl : getStickerImageUrlPng(team, num)));
     bigImgTag.onerror = function() {
       if (pngUrl && bigImgTag.src !== pngUrl) {
         bigImgTag.src = pngUrl;
@@ -3773,7 +3967,6 @@ function closeModal() {
 
 function setModalState(s) {
   if (!currentModal) return;
-  const oldState = getState(currentModal.id);
   setState(currentModal.id, s);
   document.querySelectorAll('.modal .action-btn').forEach(b => {
     b.className = 'action-btn';
@@ -3871,13 +4064,19 @@ function getMissingByTeam() {
     const mF = []; fwc1998All.forEach((id, i) => { if (getState(id) === 'missing') mF.push(String(i).padStart(2, '0')); });
     if (mF.length) map['FWC'] = mF;
   }
+  if (currentAlbum === '1994') {
+    const fwc1994All = ['fwc1994-City San Francisco','fwc1994-City Boston','fwc1994-City Orlando','fwc1994-City Dallas','fwc1994-City Detroit','fwc1994-City Chicago','fwc1994-Est. Chicago','fwc1994-Est. Detroit','fwc1994-Est. New York','fwc1994-Est. Boston','fwc1994-Est. Dallas','fwc1994-Est. Orlando','fwc1994-Est. Washington','fwc1994-Est. San Francisco','fwc1994-Est. Los Angeles'];
+    const mF = []; fwc1994All.forEach((id, i) => { if (getState(id) === 'missing') mF.push(String(i).padStart(2, '0')); });
+    if (mF.length) map['FWC'] = mF;
+  }
   if (nums1.length) map['FWC 00-08'] = nums1;
-  const shareTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : teams2018))))));
+  const shareTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : (currentAlbum === '1994' ? teams1994 : teams2018)))))));
   const is2022 = currentAlbum === '2022';
   const is2018 = currentAlbum === '2018';
   const is2014 = currentAlbum === '2014';
   const is2006 = currentAlbum === '2006';
   const is1998 = currentAlbum === '1998';
+  const is1994 = currentAlbum === '1994';
   for (const [gName, gData] of Object.entries(shareTeams)) {
     for (const team of gData.teams) {
       const nums = [];
@@ -3926,6 +4125,15 @@ function getMissingByTeam() {
           const id = `${gName}-${team.name}-${i}`;
           if (getState(id) === 'missing') nums.push(get1998SeqNum(team.name, i + 3));
         });
+      } else if (is1994) {
+        const badge = `${gName}-${team.name}-badge`;
+        if (getState(badge) === 'missing') nums.push(get1994SeqNum(team.name, 1));
+        const photo = `${gName}-${team.name}-photo`;
+        if (getState(photo) === 'missing') nums.push(get1994SeqNum(team.name, 2));
+        team.players.forEach((p, i) => {
+          const id = `${gName}-${team.name}-${i}`;
+          if (getState(id) === 'missing') nums.push(get1994SeqNum(team.name, i + 3));
+        });
       } else {
         const badge = `${gName}-${team.name}-badge`;
         if (getState(badge) === 'missing') nums.push(1);
@@ -3967,12 +4175,13 @@ function getMissingByTeam() {
 
 function getWantedByTeam() {
   const map = {};
-  const shareTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : teams2018))))));
+  const shareTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : (currentAlbum === '1994' ? teams1994 : teams2018)))))));
   const is2022 = currentAlbum === '2022';
   const is2018 = currentAlbum === '2018';
   const is2014 = currentAlbum === '2014';
   const is2006 = currentAlbum === '2006';
   const is1998 = currentAlbum === '1998';
+  const is1994 = currentAlbum === '1994';
   for (const [gName, gData] of Object.entries(shareTeams)) {
     for (const team of gData.teams) {
       const nums = [];
@@ -4021,6 +4230,15 @@ function getWantedByTeam() {
           const id = `${gName}-${team.name}-${i}`;
           if (getState(id) === 'wanted') nums.push(get1998SeqNum(team.name, i + 3));
         });
+      } else if (is1994) {
+        const badge = `${gName}-${team.name}-badge`;
+        if (getState(badge) === 'wanted') nums.push(get1994SeqNum(team.name, 1));
+        const photo = `${gName}-${team.name}-photo`;
+        if (getState(photo) === 'wanted') nums.push(get1994SeqNum(team.name, 2));
+        team.players.forEach((p, i) => {
+          const id = `${gName}-${team.name}-${i}`;
+          if (getState(id) === 'wanted') nums.push(get1994SeqNum(team.name, i + 3));
+        });
       } else {
         const badge = `${gName}-${team.name}-badge`;
         if (getState(badge) === 'wanted') nums.push(1);
@@ -4033,6 +4251,11 @@ function getWantedByTeam() {
       }
       if (nums.length) map[team.name] = nums.sort((a, b) => a - b);
     }
+  }
+  if (currentAlbum === '1994') {
+    const fwc1994All = ['fwc1994-City San Francisco','fwc1994-City Boston','fwc1994-City Orlando','fwc1994-City Dallas','fwc1994-City Detroit','fwc1994-City Chicago','fwc1994-Est. Chicago','fwc1994-Est. Detroit','fwc1994-Est. New York','fwc1994-Est. Boston','fwc1994-Est. Dallas','fwc1994-Est. Orlando','fwc1994-Est. Washington','fwc1994-Est. San Francisco','fwc1994-Est. Los Angeles'];
+    const wF = []; fwc1994All.forEach((id, i) => { if (getState(id) === 'wanted') wF.push(String(i).padStart(2, '0')); });
+    if (wF.length) map['FWC'] = wF;
   }
   if (currentAlbum === '2026') {
     fwcStickers.forEach(s => {
@@ -4116,7 +4339,7 @@ function getShareText() {
   const total = allPlayers.filter(p => getState(p.id) === 'owned').length;
   const totalMissing = Object.values(map).reduce((s, a) => s + a.length, 0);
   const totalWanted = Object.values(wantedMap).reduce((s, a) => s + a.length, 0);
-  const albumYear = currentAlbum === '2022' ? '22' : (currentAlbum === '2018' ? '18' : (currentAlbum === '2014' ? '14' : (currentAlbum === '2010' ? '10' : (currentAlbum === '2006' ? '06' : (currentAlbum === '2002' ? '02' : (currentAlbum === '1998' ? '98' : '26'))))));
+  const albumYear = currentAlbum === '2022' ? '22' : (currentAlbum === '2018' ? '18' : (currentAlbum === '2014' ? '14' : (currentAlbum === '2010' ? '10' : (currentAlbum === '2006' ? '06' : (currentAlbum === '2002' ? '02' : (currentAlbum === '1998' ? '98' : (currentAlbum === '1994' ? '94' : '26')))))));
   if (!totalMissing && !totalWanted) return `Fifarinhas ${albumYear} - Completei todos os cromos! ⚽🏆`;
   const lines = [`Fifarinhas ${albumYear} (${total}/${allPlayers.length} cromos)`];
   if (totalMissing) {
@@ -4224,8 +4447,8 @@ async function loadAdminPanel() {
     const userMap = {};
     userSnap.docs.forEach(d => { userMap[d.id] = d.data(); });
     const users = [];
-    const statesField = currentAlbum === '2022' ? 'playerStates2022' : (currentAlbum === '2018' ? 'playerStates2018' : (currentAlbum === '2014' ? 'playerStates2014' : (currentAlbum === '2010' ? 'playerStates2010' : (currentAlbum === '2006' ? 'playerStates2006' : (currentAlbum === '2002' ? 'playerStates2002' : (currentAlbum === '1998' ? 'playerStates1998' : 'playerStates'))))));
-    const albumLabel = currentAlbum === '2026' ? '2026' : (currentAlbum === '2022' ? '2022' : (currentAlbum === '2018' ? '2018' : (currentAlbum === '2014' ? '2014' : (currentAlbum === '2010' ? '2010' : (currentAlbum === '2006' ? '2006' : (currentAlbum === '2002' ? '2002' : (currentAlbum === '1998' ? '1998' : '2026')))))));
+    const statesField = currentAlbum === '2022' ? 'playerStates2022' : (currentAlbum === '2018' ? 'playerStates2018' : (currentAlbum === '2014' ? 'playerStates2014' : (currentAlbum === '2010' ? 'playerStates2010' : (currentAlbum === '2006' ? 'playerStates2006' : (currentAlbum === '2002' ? 'playerStates2002' : (currentAlbum === '1998' ? 'playerStates1998' : (currentAlbum === '1994' ? 'playerStates1994' : 'playerStates')))))));
+    const albumLabel = currentAlbum === '2026' ? '2026' : (currentAlbum === '2022' ? '2022' : (currentAlbum === '2018' ? '2018' : (currentAlbum === '2014' ? '2014' : (currentAlbum === '2010' ? '2010' : (currentAlbum === '2006' ? '2006' : (currentAlbum === '2002' ? '2002' : (currentAlbum === '1998' ? '1998' : (currentAlbum === '1994' ? '1994' : '2026'))))))));
     accSnap.docs.forEach(d => {
       const acc = d.data();
       const ud = userMap[d.id] || {};
@@ -4413,6 +4636,7 @@ function switchAlbum(year) {
   else if (year === '2006') teams = teams2006;
   else if (year === '2002') teams = teams2002;
   else if (year === '1998') teams = teams1998;
+  else if (year === '1994') teams = teams1994;
   else teams = teams2018;
   allPlayers = [];
   currentGroup = 'all';
@@ -4428,13 +4652,15 @@ function switchAlbum(year) {
 function updateHeaderAlbum() {
   const h1 = document.getElementById('loginTitle');
   if (h1) {
-    if (currentAlbum === '2022') h1.innerHTML = 'FIFA<span> RINHAS 22</span>';
+    if (currentAlbum === '2026') h1.innerHTML = 'FIFA<span> RINHAS 26</span>';
+    else if (currentAlbum === '2022') h1.innerHTML = 'FIFA<span> RINHAS 22</span>';
     else if (currentAlbum === '2018') h1.innerHTML = 'FIFA<span> RINHAS 18</span>';
     else if (currentAlbum === '2014') h1.innerHTML = 'FIFA<span> RINHAS 14</span>';
     else if (currentAlbum === '2010') h1.innerHTML = 'FIFA<span> RINHAS 10</span>';
     else if (currentAlbum === '2006') h1.innerHTML = 'FIFA<span> RINHAS 06</span>';
     else if (currentAlbum === '2002') h1.innerHTML = 'FIFA<span> RINHAS 02</span>';
     else if (currentAlbum === '1998') h1.innerHTML = 'FIFA<span> RINHAS 98</span>';
+    else if (currentAlbum === '1994') h1.innerHTML = 'FIFA<span> RINHAS 94</span>';
     else h1.innerHTML = 'FIFA<span> RINHAS 26</span>';
   }
 }
@@ -4454,13 +4680,13 @@ function buildAlbumList() {
   let h = '';
   wcAlbums.forEach(a => {
     const isCurrent = a.year === currentAlbum;
-    const activeStates = a.year === '2026' ? _states2026 : (a.year === '2022' ? _states2022 : (a.year === '2018' ? _states2018 : (a.year === '2014' ? _states2014 : (a.year === '2010' ? _states2010 : (a.year === '2006' ? _states2006 : (a.year === '2002' ? _states2002 : (a.year === '1998' ? _states1998 : {})))))));
+    const activeStates = a.year === '2026' ? _states2026 : (a.year === '2022' ? _states2022 : (a.year === '2018' ? _states2018 : (a.year === '2014' ? _states2014 : (a.year === '2010' ? _states2010 : (a.year === '2006' ? _states2006 : (a.year === '2002' ? _states2002 : (a.year === '1998' ? _states1998 : (a.year === '1994' ? _states1994 : {}))))))));
     const owned = currentUser && activeStates ? Object.keys(activeStates).filter(k => activeStates[k] === 'owned').length : 0;
     const pct = a.total > 0 ? Math.round((owned / a.total) * 100) : 0;
     const thumb = a.img
       ? '<img src="' + a.img + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span style=font-size:1.6em>⚽</span>\'">'
       : '<span style="font-size:1.6em">⚽</span>';
-    const canSwitch = a.year === '2026' || a.year === '2022' || a.year === '2018' || a.year === '2014' || a.year === '2010' || a.year === '2006' || a.year === '2002' || a.year === '1998';
+    const canSwitch = a.year === '2026' || a.year === '2022' || a.year === '2018' || a.year === '2014' || a.year === '2010' || a.year === '2006' || a.year === '2002' || a.year === '1998' || a.year === '1994';
     const clickAction = canSwitch ? "switchAlbum('" + a.year + "')" : "alert('Álbum " + a.year + " — Em breve!')";
     h += '<div class="album-opt ' + (isCurrent ? 'current' : '') + '" onclick="' + clickAction + '">'
       + '<div class="album-thumb">' + thumb + '</div>'
