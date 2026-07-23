@@ -3287,7 +3287,8 @@ function render() {
         const matchTab = currentTab === 'all' || (currentTab === 'owned' && st === 'owned') || (currentTab === 'missing' && (st === 'missing' || st === 'wanted')) || (currentTab === 'wanted' && st === 'wanted');
         if (!matchTab) return;
         const imgUrl = `https://www.laststicker.com/i/cards/7/${s.num}.jpg`;
-        h += `<div class="sticker fwc ${st}" data-id="${s.id}" style="aspect-ratio:4/3;" onclick="openModal('${s.id}','${s.name}','fwc','FWC',${s.num})">
+        const escName = s.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        h += `<div class="sticker fwc ${st}" data-id="${s.id}" style="aspect-ratio:4/3;" onclick="openModal('${s.id}','${escName}','fwc','FWC',${s.num})">
           <img class="sticker-bg" loading="lazy" src="${imgUrl}" onerror="this.style.display='none'">
           <div class="num">${String(s.num).padStart(2,'0')}</div>
           <div class="name">${s.name}</div>
