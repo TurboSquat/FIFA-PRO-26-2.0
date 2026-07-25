@@ -51,7 +51,7 @@ const teams1998_data = {
 
 const teamHasNoTeamPage1998 = {
   'Morocco': true, 'Chile': true, 'Nigeria': true, 'England': true,
-  'USA': true, 'Iran': true, 'Jamaica': true
+  'USA': true, 'Iran': true, 'Saudi Arabia': true, 'Jamaica': true
 };
 
 const teamBase1998 = {
