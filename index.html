@@ -702,6 +702,7 @@ body {
 }
 
 .modal .sticker-img-full {
+  position: relative;
   width: 140px;
   height: 185px;
   margin: 0 auto 8px;
@@ -1477,26 +1478,7 @@ function handleStickerError(img) {
     if (currentAlbum === '2018' || currentAlbum === '2014') {
       img.src = `https://www.laststicker.com/i/cards/${currentAlbum === '2014' ? '1498' : '3852'}/${num}.png`;
     } else if (currentAlbum !== '1974' && currentAlbum !== '1978' && currentAlbum !== '1970') {
-    if (currentAlbum === '1974' || currentAlbum === '1978' || currentAlbum === '1970') {
-      img.style.display = 'none';
-      var container = img.parentElement;
-      container.querySelectorAll('.num,.pos').forEach(function(e){e.style.display='none'});
-      var fb = teamBadgeFallback[team];
-      if (fb) {
-        container.insertAdjacentHTML('beforeend', '<img src="' + fb + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px;">');
-      } else {
-        var teamColors = teamColors2026;
-        var tc = teamColors[team];
-        if (tc) {
-          var bg = tc.length > 2 ? 'linear-gradient(135deg,' + tc[0] + ',' + tc[1] + ')' : 'linear-gradient(135deg,' + tc[0] + ',' + (tc[1]||tc[0]) + ')';
-          container.style.background = bg;
-        } else {
-          container.style.background = 'linear-gradient(135deg,#141E30,#243B55)';
-        }
-      }
-      return;
-    }
-    img.src = getStickerImageUrlPng(team, parseInt(num));
+      img.src = getStickerImageUrlPng(team, parseInt(num));
     } else {
       img.style.display = 'none';
       var container = img.parentElement;
@@ -1555,6 +1537,25 @@ function handleBadgeError(img) {
         var flagIso = teamIso[team] || '';
         var flagHtml = flagIso ? '<img src="https://flagcdn.com/48x36/' + flagIso + '.png" style="width:32px;height:24px;opacity:0.3;">' : '';
         container.insertAdjacentHTML('beforeend', '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;background:' + bg + ';border-radius:10px;text-shadow:0 2px 6px rgba(0,0,0,0.5);">' + flagHtml + '</div>');
+      }
+      return;
+    }
+    if (currentAlbum === '1974' || currentAlbum === '1978' || currentAlbum === '1970') {
+      img.style.display = 'none';
+      var container = img.parentElement;
+      container.querySelectorAll('.num,.pos').forEach(function(e){e.style.display='none'});
+      var fb = teamBadgeFallback[team];
+      if (fb) {
+        container.insertAdjacentHTML('beforeend', '<img src="' + fb + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px;">');
+      } else {
+        var teamColors = teamColors2026;
+        var tc = teamColors[team];
+        if (tc) {
+          var bg = tc.length > 2 ? 'linear-gradient(135deg,' + tc[0] + ',' + tc[1] + ')' : 'linear-gradient(135deg,' + tc[0] + ',' + (tc[1]||tc[0]) + ')';
+          container.style.background = bg;
+        } else {
+          container.style.background = 'linear-gradient(135deg,#141E30,#243B55)';
+        }
       }
       return;
     }
@@ -2402,6 +2403,21 @@ if (currentAlbum === '2014' || currentAlbum === '2010' || currentAlbum === '2006
       allPlayers.push({ id: s.id, group: 'FWC', team: 'FWC', name: s.name, pos: 'fwc', num: s.num });
     });
   }
+  if (currentAlbum === '1978') {
+    [...fwc1978History, ...fwc1978Stadiums].forEach(s => {
+      allPlayers.push({ id: s.id, group: 'FWC', team: 'FWC', name: s.name, pos: 'fwc', num: s.num });
+    });
+  }
+  if (currentAlbum === '1974') {
+    [...fwc1974Special, ...fwc1974Intro, ...fwc1974Mascots, ...fwc1974Stadiums].forEach(s => {
+      allPlayers.push({ id: s.id, group: 'FWC', team: 'FWC', name: s.name, pos: 'fwc', num: s.num });
+    });
+  }
+  if (currentAlbum === '1970') {
+    [...fwc1970Special, ...fwc1970Posters, ...fwc1970Stadiums].forEach(s => {
+      allPlayers.push({ id: s.id, group: 'FWC', team: 'FWC', name: s.name, pos: 'fwc', num: s.num });
+    });
+  }
   if (currentAlbum === '2006') {
     var fwc2006All = [
       { name: 'Official Match Ball Teamgeist', id: 'fwc2006-Intro Ball', num: 0 },
@@ -2474,6 +2490,11 @@ if (currentAlbum === '2014' || currentAlbum === '2010' || currentAlbum === '2006
         });
       } else if (currentAlbum === '2014' || currentAlbum === '2010' || currentAlbum === '2006' || currentAlbum === '2002' || currentAlbum === '1998' || currentAlbum === '1994' || currentAlbum === '1990' || currentAlbum === '1986' || currentAlbum === '1982' || currentAlbum === '1978' || currentAlbum === '1974' || currentAlbum === '1970') {
         const getSeq = (t, p) => currentAlbum === '2014' ? get2014SeqNum(t, p) : (currentAlbum === '2010' ? get2010SeqNum(t, p) : (currentAlbum === '2006' ? get2006SeqNum(t, p) : (currentAlbum === '2002' ? get2002SeqNum(t, p) : (currentAlbum === '1998' ? get1998SeqNum(t, p) : (currentAlbum === '1994' ? get1994SeqNum(t, p) : (currentAlbum === '1990' ? get1990SeqNum(t, p) : (currentAlbum === '1986' ? get1986SeqNum(t, p) : (currentAlbum === '1982' ? get1982SeqNum(t, p) : (currentAlbum === '1978' ? get1978SeqNum(t, p) : (currentAlbum === '1974' ? get1974SeqNum(t, p) : get1970SeqNum(t, p)))))))))));
+        if (currentAlbum === '1970') {
+          const flagSeq = getSeq(team.name, 0);
+          const idFlag = `${gName}-${team.name}-flag`;
+          allPlayers.push({ id: idFlag, group: gName, team: team.name, name: 'Bandeira', pos: 'FLG', num: flagSeq });
+        }
         const idBadge = `${gName}-${team.name}-badge`;
         allPlayers.push({ id: idBadge, group: gName, team: team.name, name: 'Emblema', pos: 'badge', num: getSeq(team.name, 1) });
         const idPhoto = `${gName}-${team.name}-photo`;
@@ -2634,9 +2655,9 @@ function render() {
     const wanted = activePlayers.filter(p => getState(p.id) === 'wanted').length;
     const total = activePlayers.length;
     const pct = total > 0 ? Math.round((owned / total) * 100) : 0;
-    const wcYear = currentAlbum === '2022' ? 2022 : (currentAlbum === '2018' ? 2018 : (currentAlbum === '2010' ? 2010 : (currentAlbum === '2006' ? 2006 : (currentAlbum === '2002' ? 2002 : (currentAlbum === '1998' ? 1998 : (currentAlbum === '1994' ? 1994 : 2026))))));
+    const wcYear = currentAlbum === '2022' ? 2022 : (currentAlbum === '2018' ? 2018 : (currentAlbum === '2014' ? 2014 : (currentAlbum === '2010' ? 2010 : (currentAlbum === '2006' ? 2006 : (currentAlbum === '2002' ? 2002 : (currentAlbum === '1998' ? 1998 : (currentAlbum === '1994' ? 1994 : (currentAlbum === '1990' ? 1990 : (currentAlbum === '1986' ? 1986 : (currentAlbum === '1982' ? 1982 : (currentAlbum === '1978' ? 1978 : (currentAlbum === '1974' ? 1974 : (currentAlbum === '1970' ? 1970 : 2026)))))))))))));
     
-    const worldCup = new Date(currentAlbum === '2022' ? '2022-11-20T00:00:00' : (currentAlbum === '2018' ? '2018-06-14T00:00:00' : (currentAlbum === '2010' ? '2010-06-11T00:00:00' : (currentAlbum === '2006' ? '2006-06-09T00:00:00' : (currentAlbum === '2002' ? '2002-05-31T00:00:00' : (currentAlbum === '1998' ? '1998-06-10T00:00:00' : (currentAlbum === '1994' ? '1994-06-17T00:00:00' : '2026-06-11T00:00:00')))))));
+    const worldCup = new Date(currentAlbum === '2022' ? '2022-11-20T00:00:00' : (currentAlbum === '2018' ? '2018-06-14T00:00:00' : (currentAlbum === '2010' ? '2010-06-11T00:00:00' : (currentAlbum === '2006' ? '2006-06-09T00:00:00' : (currentAlbum === '2002' ? '2002-05-31T00:00:00' : (currentAlbum === '1998' ? '1998-06-10T00:00:00' : (currentAlbum === '1994' ? '1994-06-17T00:00:00' : (currentAlbum === '1990' ? '1990-06-08T00:00:00' : (currentAlbum === '1986' ? '1986-05-31T00:00:00' : (currentAlbum === '1982' ? '1982-06-13T00:00:00' : (currentAlbum === '1978' ? '1978-06-01T00:00:00' : (currentAlbum === '1974' ? '1974-06-13T00:00:00' : (currentAlbum === '1970' ? '1970-05-31T00:00:00' : '2026-06-11T00:00:00')))))))))))));
     const now = new Date();
     const diff = worldCup - now;
     const cwDays = diff > 0 ? Math.floor(diff / 86400000) : 0;
@@ -2686,7 +2707,7 @@ function render() {
         <div style="font-size:0.8em;color:var(--muted);margin-bottom:4px;">⚽ Mundial ${wcYear} começa em</div>
         <div style="font-size:1.8em;font-weight:800;color:var(--gold);">${cwDays}d ${cwHours}h</div>
       </div>` : `<div style="background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--gold);border-radius:14px;padding:16px;margin-bottom:20px;">
-        <div style="font-size:1.4em;font-weight:800;color:var(--gold);">🏆 Mundial ${wcYear} em curso!</div>
+        <div style="font-size:1.4em;font-weight:800;color:var(--gold);">🏆 Mundial ${wcYear} ${currentAlbum === '2026' ? 'em curso!' : 'já acabou!'}</div>
       </div>`}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:400px;margin:0 auto 20px;">
         <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:16px;border:1px solid var(--border);">
@@ -3503,6 +3524,12 @@ function render() {
     html += renderFwcGenericSection(fwc1974Mascots, 'Mascotes e Cidade', '🏙️', fwc1974img);
     html += renderFwcGenericSection(fwc1974Stadiums, 'Estádios', '🏟️', fwc1974img);
   }
+  if (currentAlbum === '1970' && (currentGroup === 'all' || currentGroup === 'FWC')) {
+    const fwc1970img = (num) => `https://www.laststicker.com/i/cards/219/${num}.jpg`;
+    html += renderFwcGenericSection(fwc1970Special, 'Mexico 70', '🏆', fwc1970img);
+    html += renderFwcGenericSection(fwc1970Posters, 'Copas do Mundo', '🌍', fwc1970img);
+    html += renderFwcGenericSection(fwc1970Stadiums, 'Estádio', '🏟️', fwc1970img);
+  }
 
   for (const gName of groups) {
     let groupHTML = '';
@@ -3520,7 +3547,7 @@ function render() {
       let badgeHTML = '';
       let photoHTML = '';
       let count = 0;
-      const totalStickers = (currentAlbum === '1974' && teamHasNoTeamPage1974 && teamHasNoTeamPage1974[team.name]) ? 5 : (currentAlbum === '1994' && teamHasNoTeamPage1994 && teamHasNoTeamPage1994[team.name] ? (['Bolivia','Nigeria','Saudi Arabia'].includes(team.name) ? 10 : 17) : (currentAlbum === '1998' && teamHasNoTeamPage1998 && teamHasNoTeamPage1998[team.name] ? (['USA','Iran','Saudi Arabia','Jamaica'].includes(team.name) ? 9 : 17) : (currentAlbum === '1982' && teamHasNoTeamPage1982 && teamHasNoTeamPage1982[team.name] ? 10 : team.players.length + 2)));
+      const totalStickers = (currentAlbum === '1974' && teamHasNoTeamPage1974 && teamHasNoTeamPage1974[team.name]) ? 5 : (currentAlbum === '1994' && teamHasNoTeamPage1994 && teamHasNoTeamPage1994[team.name] ? (['Bolivia','Nigeria','Saudi Arabia'].includes(team.name) ? 10 : 17) : (currentAlbum === '1998' && teamHasNoTeamPage1998 && teamHasNoTeamPage1998[team.name] ? (['USA','Iran','Saudi Arabia','Jamaica'].includes(team.name) ? 9 : 17) : (currentAlbum === '1982' && teamHasNoTeamPage1982 && teamHasNoTeamPage1982[team.name] ? 10 : team.players.length + (currentAlbum === '1970' ? 3 : 2))));
       const is2022 = currentAlbum === '2022';
       const idBadge = `${gName}-${team.name}-badge`;
       const stateBadge = getState(idBadge);
@@ -3754,6 +3781,25 @@ function render() {
           </div>`;
           if (ordenarPorNum) stickerParts.push({ n: stickerNum, html }); else playersOnlyHTML += html;
         });
+        if (currentAlbum === '1970' && matchTeam) {
+          const flagSeq = getSeq(team.name, 0);
+          if (flagSeq) {
+            const idFlag = `${gName}-${team.name}-flag`;
+            const stateFlag = getState(idFlag);
+            const matchTabFlag = currentTab === 'all' || (currentTab === 'owned' && stateFlag === 'owned') || (currentTab === 'missing' && (stateFlag === 'missing' || stateFlag === 'wanted')) || (currentTab === 'wanted' && stateFlag === 'wanted');
+            if (matchTabFlag) {
+              count++;
+              const flagUrl = getStickerImageUrl(team.name, 0);
+              const html = `<div class="sticker ${stateFlag}" data-id="${idFlag}" style="aspect-ratio:4/3;max-width:96%;margin:0 auto;" onclick="openModal('${idFlag}','Bandeira','FLG','${team.name.replace(/'/g,"\\'")}',${flagSeq})">
+                <img class="sticker-bg" loading="lazy" src="${flagUrl}" data-team="${team.name}" data-num="${flagSeq}" onerror="handleStickerError(this)">
+                <div class="num">${String(flagSeq).padStart(2,'0')}</div>
+                <div class="pos">FLG</div>
+                <div class="name">${getFlagImg(team.name, 32)}</div>
+              </div>`;
+              if (ordenarPorNum) stickerParts.push({ n: flagSeq, html }); else playersOnlyHTML = html + playersOnlyHTML;
+            }
+          }
+        }
         if (matchTeam && matchTabBadge) {
           count++;
           const badgeUrl = getStickerImageUrl(team.name, 1);
@@ -4121,7 +4167,7 @@ function getStickerImageUrl(teamName, stickerPos) {
   if (currentAlbum === '1970') {
     const seq = get1970SeqNum(teamName, stickerPos);
     if (!seq) return '';
-    return `https://www.laststicker.com/i/cards/panini_fifa_world_cup_1970/${seq}.jpg`;
+    return `https://www.laststicker.com/i/cards/219/${seq}.jpg`;
   }
   const idx = teamOrder.indexOf(teamName);
   if (idx === -1) return '';
@@ -4190,7 +4236,16 @@ function get1974SeqNum(teamName, stickerPos) {
 function get1970SeqNum(teamName, stickerPos) {
   const base = teamBase1970[teamName];
   if (!base) return 0;
-  return base + stickerPos - 1;
+  const smallTeams1970 = { 'Belgium':1, 'El Salvador':1, 'Uruguay':1, 'Sweden':1, 'Israel':1, 'Czechoslovakia':1, 'Romania':1, 'Bulgaria':1, 'Peru':1, 'Morocco':1 };
+  if (smallTeams1970[teamName]) {
+    if (stickerPos === 0) return base;
+    if (stickerPos === 1) return base + 1;
+    if (stickerPos === 2) return base + 3;
+    if (stickerPos === 3) return base + 2;
+    return base + stickerPos;
+  }
+  if (stickerPos === 0) return base;
+  return base + stickerPos;
 }
 function get1994SeqNum(teamName, stickerPos) {
   const base = teamBase1994[teamName];
@@ -4308,7 +4363,7 @@ function getStickerImageUrlPng(teamName, stickerPos) {
   if (currentAlbum === '1970') {
     const seq = get1970SeqNum(teamName, stickerPos);
     if (!seq) return '';
-    return `https://www.laststicker.com/i/cards/panini_fifa_world_cup_1970/${seq}.jpg`;
+    return `https://www.laststicker.com/i/cards/219/${seq}.jpg`;
   }
   const idx = teamOrder.indexOf(teamName);
   if (idx === -1) return '';
@@ -4336,7 +4391,7 @@ function openModal(id, name, pos, team, num) {
   document.getElementById('modalPos').textContent = `${pos} · ${team}`;
   const bigImg = document.getElementById('modalStickerImg');
   const bigImgTag = document.getElementById('modalStickerImgTag');
-  bigImg.classList.toggle('photo-modal', pos === 'photo' || (currentAlbum === '2006' && pos === 'EMB') || (currentAlbum === '2014' && pos === 'EMB') || (currentAlbum === '2002' && pos === 'EMB' && emblemaHorizontais2002.includes(team)) || (currentAlbum === '1974' && pos === 'EMB' && teamHasNoTeamPage1974 && teamHasNoTeamPage1974[team]) || (currentAlbum === '2002' && pos !== 'EMB' && pos !== 'photo' && name.includes('/')) || (currentAlbum === '2006' && pos !== 'EMB' && ['Angola', 'Ghana', 'Saudi Arabia'].includes(team)) || (currentAlbum === '1998' && ['USA', 'Iran', 'Saudi Arabia', 'Jamaica'].includes(team)) || (currentAlbum === '1994' && ['Bolivia', 'Nigeria', 'Saudi Arabia'].includes(team)) || (currentAlbum === '1990' && pos !== 'EMB' && pos !== 'photo' && name.includes('/')) || (currentAlbum === '1986' && pos !== 'EMB' && pos !== 'photo' && name.includes('/')) || (currentAlbum === '1982' && pos !== 'EMB' && pos !== 'photo' && name.includes('/')));
+  bigImg.classList.toggle('photo-modal', pos === 'photo' || pos === 'FLG' || (currentAlbum === '2006' && pos === 'EMB') || (currentAlbum === '2014' && pos === 'EMB') || (currentAlbum === '2002' && pos === 'EMB' && emblemaHorizontais2002.includes(team)) || (currentAlbum === '1974' && pos === 'EMB' && teamHasNoTeamPage1974 && teamHasNoTeamPage1974[team]) || (currentAlbum === '2002' && pos !== 'EMB' && pos !== 'photo' && name.includes('/')) || (currentAlbum === '2006' && pos !== 'EMB' && ['Angola', 'Ghana', 'Saudi Arabia'].includes(team)) || (currentAlbum === '1998' && ['USA', 'Iran', 'Saudi Arabia', 'Jamaica'].includes(team)) || (currentAlbum === '1994' && ['Bolivia', 'Nigeria', 'Saudi Arabia'].includes(team)) || (currentAlbum === '1990' && pos !== 'EMB' && pos !== 'photo' && name.includes('/')) || (currentAlbum === '1986' && pos !== 'EMB' && pos !== 'photo' && name.includes('/')) || (currentAlbum === '1982' && pos !== 'EMB' && pos !== 'photo' && name.includes('/')));
   bigImg.classList.toggle('badge-horiz-2002', currentAlbum === '2002' && pos === 'EMB' && emblemaHorizontais2002.includes(team));
   bigImg.classList.toggle('fwc-modal', pos === 'fwc');
   let imgUrl = '';
@@ -4369,7 +4424,7 @@ function openModal(id, name, pos, team, num) {
     } else if (currentAlbum === '1974') {
       imgUrl = `https://www.laststicker.com/i/cards/374/${num}.jpg`;
     } else if (currentAlbum === '1970') {
-      imgUrl = `https://www.laststicker.com/i/cards/panini_fifa_world_cup_1970/${num}.jpg`;
+      imgUrl = `https://www.laststicker.com/i/cards/219/${num}.jpg`;
     } else {
       const fireNum = num + 1;
       imgUrl = `https://firebasestorage.googleapis.com/v0/b/centralcopa-prod.firebasestorage.app/o/public%2Fstickers%2FWC2026_BR%2F${fireNum}.jpg?alt=media`;
@@ -4404,13 +4459,21 @@ function openModal(id, name, pos, team, num) {
   } else if (currentAlbum === '1974') {
     imgUrl = `https://www.laststicker.com/i/cards/374/${num}.jpg`;
   } else if (currentAlbum === '1970') {
-    imgUrl = `https://www.laststicker.com/i/cards/panini_fifa_world_cup_1970/${num}.jpg`;
+    imgUrl = `https://www.laststicker.com/i/cards/219/${num}.jpg`;
   } else {
       imgUrl = getStickerImageUrl(team, num);
     }
   if (imgUrl) {
     bigImgTag.src = imgUrl;
     bigImg.style.display = 'flex';
+    bigImg.querySelectorAll('.crown-overlay').forEach(e => e.remove());
+    if (name.includes('Eusébio')) {
+      var crownDiv = document.createElement('div');
+      crownDiv.className = 'crown-overlay';
+      crownDiv.style.cssText = 'position:absolute;top:8px;right:12px;font-size:2em;z-index:20;text-shadow:0 0 8px gold,0 0 16px gold;pointer-events:none;';
+      crownDiv.textContent = '👑';
+      bigImg.appendChild(crownDiv);
+    }
     const pngUrl = (pos === 'fwc' || pos === 'FWC') ? imgUrl.replace('.jpg', '.png') : (pos === 'Coca-Cola' ? imgUrl.replace('.jpg', '.png') : ((currentAlbum === '2018' || currentAlbum === '2014' || currentAlbum === '2010' || currentAlbum === '2006' || currentAlbum === '2002' || currentAlbum === '1998' || currentAlbum === '1994' || currentAlbum === '1990' || currentAlbum === '1986' || currentAlbum === '1982') ? imgUrl : getStickerImageUrlPng(team, num)));
     bigImgTag.onerror = function() {
       if (pngUrl && bigImgTag.src !== pngUrl) {
@@ -4578,6 +4641,21 @@ function getMissingByTeam() {
     const mF = []; fwc1982All.forEach(s => { if (getState(s.id) === 'missing') mF.push(String(s.num).padStart(2, '0')); });
     if (mF.length) map['FWC'] = mF;
   }
+  if (currentAlbum === '1978') {
+    const fwc1978All = fwc1978History.concat(fwc1978Stadiums);
+    const mF = []; fwc1978All.forEach(s => { if (getState(s.id) === 'missing') mF.push(String(s.num).padStart(2, '0')); });
+    if (mF.length) map['FWC'] = mF;
+  }
+  if (currentAlbum === '1974') {
+    const fwc1974All = fwc1974Special.concat(fwc1974Intro, fwc1974Mascots, fwc1974Stadiums);
+    const mF = []; fwc1974All.forEach(s => { if (getState(s.id) === 'missing') mF.push(String(s.num).padStart(2, '0')); });
+    if (mF.length) map['FWC'] = mF;
+  }
+  if (currentAlbum === '1970') {
+    const fwc1970All = fwc1970Special.concat(fwc1970Posters, fwc1970Stadiums);
+    const mF = []; fwc1970All.forEach(s => { if (getState(s.id) === 'missing') mF.push(String(s.num).padStart(2, '0')); });
+    if (mF.length) map['FWC'] = mF;
+  }
   if (nums1.length) map['FWC 00-08'] = nums1;
   const shareTeams = currentAlbum === '2026' ? teams : (currentAlbum === '2022' ? teams2022 : (currentAlbum === '2014' ? teams2014 : (currentAlbum === '2010' ? teams2010 : (currentAlbum === '2006' ? teams2006 : (currentAlbum === '2002' ? teams2002 : (currentAlbum === '1998' ? teams1998 : (currentAlbum === '1994' ? teams1994 : (currentAlbum === '1990' ? teams1990 : (currentAlbum === '1986' ? teams1986 : (currentAlbum === '1982' ? teams1982 : (currentAlbum === '1978' ? teams1978 : (currentAlbum === '1974' ? teams1974 : (currentAlbum === '1970' ? teams1970 : teams2018)))))))))))));
   const is2022 = currentAlbum === '2022';
@@ -4712,6 +4790,8 @@ function getMissingByTeam() {
           if (getState(id) === 'missing') nums.push(get1974SeqNum(team.name, i + 3));
         });
       } else if (currentAlbum === '1970') {
+        const flag = `${gName}-${team.name}-flag`;
+        if (getState(flag) === 'missing') nums.push(get1970SeqNum(team.name, 0));
         const badge = `${gName}-${team.name}-badge`;
         if (getState(badge) === 'missing') nums.push(get1970SeqNum(team.name, 1));
         const photo = `${gName}-${team.name}-photo`;
@@ -5008,6 +5088,21 @@ function getWantedByTeam() {
     const wF = []; fwc1982All.forEach(s => { if (getState(s.id) === 'wanted') wF.push(String(s.num).padStart(2, '0')); });
     if (wF.length) map['FWC'] = wF;
   }
+  if (currentAlbum === '1978') {
+    const fwc1978All = fwc1978History.concat(fwc1978Stadiums);
+    const wF = []; fwc1978All.forEach(s => { if (getState(s.id) === 'wanted') wF.push(String(s.num).padStart(2, '0')); });
+    if (wF.length) map['FWC'] = wF;
+  }
+  if (currentAlbum === '1974') {
+    const fwc1974All = fwc1974Special.concat(fwc1974Intro, fwc1974Mascots, fwc1974Stadiums);
+    const wF = []; fwc1974All.forEach(s => { if (getState(s.id) === 'wanted') wF.push(String(s.num).padStart(2, '0')); });
+    if (wF.length) map['FWC'] = wF;
+  }
+  if (currentAlbum === '1970') {
+    const fwc1970All = fwc1970Special.concat(fwc1970Posters, fwc1970Stadiums);
+    const wF = []; fwc1970All.forEach(s => { if (getState(s.id) === 'wanted') wF.push(String(s.num).padStart(2, '0')); });
+    if (wF.length) map['FWC'] = wF;
+  }
   return map;
 }
 
@@ -5017,7 +5112,7 @@ function getShareText() {
   const total = allPlayers.filter(p => getState(p.id) === 'owned').length;
   const totalMissing = Object.values(map).reduce((s, a) => s + a.length, 0);
   const totalWanted = Object.values(wantedMap).reduce((s, a) => s + a.length, 0);
-  const albumYear = currentAlbum === '2022' ? '22' : (currentAlbum === '2018' ? '18' : (currentAlbum === '2014' ? '14' : (currentAlbum === '2010' ? '10' : (currentAlbum === '2006' ? '06' : (currentAlbum === '2002' ? '02' : (currentAlbum === '1998' ? '98' : (currentAlbum === '1994' ? '94' : '26')))))));
+  const albumYear = currentAlbum === '2022' ? '22' : (currentAlbum === '2018' ? '18' : (currentAlbum === '2014' ? '14' : (currentAlbum === '2010' ? '10' : (currentAlbum === '2006' ? '06' : (currentAlbum === '2002' ? '02' : (currentAlbum === '1998' ? '98' : (currentAlbum === '1994' ? '94' : (currentAlbum === '1990' ? '90' : (currentAlbum === '1986' ? '86' : (currentAlbum === '1982' ? '82' : (currentAlbum === '1978' ? '78' : (currentAlbum === '1974' ? '74' : (currentAlbum === '1970' ? '70' : '26')))))))))))));
   if (!totalMissing && !totalWanted) return `Fifarinhas ${albumYear} - Completei todos os cromos! ⚽🏆`;
   const lines = [`Fifarinhas ${albumYear} (${total}/${allPlayers.length} cromos)`];
   if (totalMissing) {
