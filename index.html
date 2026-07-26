@@ -5552,8 +5552,10 @@ function sendChat() {
   renderChatMessages();
   const loadingDiv = document.getElementById('chatLoading');
   if (loadingDiv) loadingDiv.style.display = 'block';
-  fetch('/api/search?q=' + encodeURIComponent(msg))
-    .then(r => r.json())
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  fetch('/api/search?q=' + encodeURIComponent(msg), { signal: controller.signal })
+    .then(r => { clearTimeout(timeoutId); return r.json(); })
     .then(data => {
       chatHistory.push({
         role: 'bot',
@@ -5566,8 +5568,12 @@ function sendChat() {
       btn.disabled = false;
       renderChatMessages();
     })
-    .catch(() => {
-      chatHistory.push({ role: 'bot', query: msg, answer: '', source: null, extraLinks: [], error: true });
+    .catch(e => {
+      clearTimeout(timeoutId);
+      const errMsg = e.name === 'AbortError'
+        ? 'A pesquisa demorou muito. O Render free tier pode estar a despertar. Tenta novamente em 30 segundos.'
+        : 'Erro ao pesquisar. Verifica se o servidor está a correr.';
+      chatHistory.push({ role: 'bot', query: msg, answer: errMsg, source: null, extraLinks: [], error: false });
       chatSearching = false;
       btn.disabled = false;
       renderChatMessages();

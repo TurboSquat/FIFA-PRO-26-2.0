@@ -6,19 +6,37 @@ const https = require('https');
 const PORT = process.env.PORT || 3000;
 const DIR = __dirname;
 
+const cache = {};
+const CACHE_TTL = 3600000;
+
+function getCached(key) {
+  const entry = cache[key];
+  if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.data;
+  delete cache[key];
+  return null;
+}
+
+function setCache(key, data) {
+  cache[key] = { data, ts: Date.now() };
+  const keys = Object.keys(cache);
+  if (keys.length > 200) delete cache[keys[0]];
+}
+
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
   '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml', '.ico': 'image/x-icon'
 };
 
-function httpsGet(url) {
+function httpsGet(url, timeoutMs = 10000) {
   return new Promise((resolve, reject) => {
-    https.get(url, { headers: { 'User-Agent': 'FifarinhasBot/1.0', 'Accept': 'application/json' } }, (res) => {
+    const req = https.get(url, { headers: { 'User-Agent': 'FifarinhasBot/1.0', 'Accept': 'application/json' }, timeout: timeoutMs }, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => resolve(data));
-    }).on('error', reject);
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
   });
 }
 
@@ -154,12 +172,16 @@ function formatResponse(query, wikiResult, ddgResults) {
 }
 
 async function webSearch(query) {
+  const cached = getCached(query.toLowerCase());
+  if (cached) return cached;
   const { queries, year } = buildSearchQueries(query);
   let wikiResult = null;
   let ddgResults = [];
   try { wikiResult = await searchWikipedia(queries, year); } catch(e) {}
   try { ddgResults = await searchDDG(queries[0]); } catch(e) {}
-  return formatResponse(query, wikiResult, ddgResults);
+  const result = formatResponse(query, wikiResult, ddgResults);
+  setCache(query.toLowerCase(), result);
+  return result;
 }
 
 http.createServer(async (req, res) => {
