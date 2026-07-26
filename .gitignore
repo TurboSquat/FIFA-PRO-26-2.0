@@ -1,27 +1,22 @@
-.DS_Store
-__pycache__/
-*.py[cod]
-
-.context/
+node_modules/
 .env
-.env.*
-.venv/
-venv/
-
-bets/
-
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
-# DuckDB analytics database — derived artifact, rebuildable via
-# `python3 tools/build_duckdb.py`. The masters at db/masters/*.csv are
-# the committed source of truth; the .duckdb file is not.
-data/*.duckdb
-data/*.duckdb-wal
-data/*.duckdb-tmp
-
-# Build-step quarantine review queue (generated each build)
-db/registry/unmatched.csv
-
-graphene-app-world-cup/
+*.log
+.DS_Store
+Thumbs.db
+index.html.test
+*.ps1
+*.py
+Modelos Personalizados do Office/
+laststicker_*.html
+mundodasfigurinhas.html
+upload-stickers.html
+upload-teams*.html
+test_*.html
+teste*.html
+worldcup_data_*.json
+find_*.ps1
+fix_*.ps1
+read_section.ps1
+test_sort.ps1
+compare.*
+iniciar.bat

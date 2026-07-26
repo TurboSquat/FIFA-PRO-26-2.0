@@ -1,0 +1,14 @@
+{
+  "name": "fifarinhas-ai",
+  "version": "1.0.0",
+  "description": "Fifarinhas 26 - World Cup Stickers Album with AI Chatbot",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["futebol", "cromos", "copa-do-mundo", "chatbot"],
+  "license": "MIT"
+}
