@@ -4539,7 +4539,7 @@ function atualizarContadores() {
   var owned = 0, total = 0;
   for (var i = 0; i < allPlayers.length; i++) {
     var p = allPlayers[i];
-    if (p.pos === 'coca') continue;
+    if (p.pos === 'coca' && !showCoca) continue;
     total++;
     if (getState(p.id) === 'owned') owned++;
   }
